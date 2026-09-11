@@ -10,7 +10,7 @@
 <div id="app">
 
   <header id="top-bar">
-    <h1>THE VOLATILE ARENA</h1>
+    <h1><span class="title-flourish" aria-hidden="true">&#9876;&#65039;</span> THE VOLATILE ARENA <span class="title-flourish" aria-hidden="true">&#9876;&#65039;</span></h1>
     <span class="subtitle">Roguelite Competitivo &middot; Marco de Diseno v3.3</span>
   </header>
 
@@ -32,23 +32,23 @@
     <button id="start-tutorial-btn" class="btn">Modo Tutorial (vs IA)</button>
   </section>
 
-  <section id="game-screen" class="screen" hidden>
+  <section id="game-screen" class="screen screen-game" hidden>
 
     <div id="players-bar"></div>
 
     <div id="board">
-      <div id="log-panel"><div id="log-list"></div></div>
-
       <div id="action-panel">
         <div id="phase-banner"></div>
         <div id="coach-panel" hidden></div>
         <div id="hand-area"></div>
         <div id="controls"></div>
         <div id="loot-bar"></div>
-        <div class="field-row">
-          <button id="how-to-play-btn-game" class="btn btn-small">Como jugar</button>
-        </div>
       </div>
+
+      <aside id="side-panel">
+        <div id="log-panel"><div id="log-list"></div></div>
+        <button id="how-to-play-btn-game" class="btn btn-small">Como jugar</button>
+      </aside>
     </div>
 
     <div id="overlay-root"></div>

@@ -7,6 +7,7 @@
     gladiador: {
       id: 'gladiador',
       name: 'Gladiador',
+      icon: '⚔️',
       maxHp: 25,
       summary: '+3 de dano en todos sus ataques.',
       drawback: 'HP base baja (25).'
@@ -14,6 +15,7 @@
     espejo: {
       id: 'espejo',
       name: 'Espejo',
+      icon: '🪞',
       maxHp: 40,
       summary: 'Refleja el 25% del dano recibido (max 8) al atacante.',
       drawback: 'No puede equipar artefactos tipo Escudo. El reflejo no aplica a monstruos.'
@@ -21,6 +23,7 @@
     cleptomano: {
       id: 'cleptomano',
       name: 'Cleptomano',
+      icon: '🥷',
       maxHp: 40,
       summary: 'Roba 1 carta al azar de la mano de un rival al inicio de su turno.',
       drawback: 'Los monstruos tienen +4 HP contra el.'
@@ -28,6 +31,7 @@
     taumaturgo: {
       id: 'taumaturgo',
       name: 'Taumaturgo',
+      icon: '✨',
       maxHp: 40,
       summary: 'Curaciones x1.5 (redondeado hacia abajo).',
       drawback: 'Sus ataques hacen -4 de dano (minimo 1).'
@@ -35,6 +39,7 @@
     alquimista: {
       id: 'alquimista',
       name: 'Alquimista',
+      icon: '⚗️',
       maxHp: 40,
       summary: 'Puede usar cartas negras para curar y rojas para atacar, al 70% del valor (floor).',
       drawback: 'El 30% de penalizacion es fijo e irreducible.'
@@ -42,6 +47,7 @@
     sanguinario: {
       id: 'sanguinario',
       name: 'Sanguinario',
+      icon: '🩸',
       maxHp: 40,
       summary: 'Recupera 1 HP por cada 5 de dano infligido (max 8 HP/turno).',
       drawback: 'Pierde 1 HP al inicio de cada turno.'
@@ -64,6 +70,7 @@
     ladron: {
       id: 'ladron',
       name: 'Ladron de Sombras',
+      icon: '🗡️',
       hp: 12,
       minRank: 3, /* Tercia+ */
       minLabel: 'Tercia+ (16+)',
@@ -75,6 +82,7 @@
     sombra: {
       id: 'sombra',
       name: 'Sombra del Vacio',
+      icon: '👻',
       hp: 30,
       minRank: 6, /* Poker+ */
       minLabel: 'Poker+ (29+)',
@@ -85,6 +93,7 @@
     azazel: {
       id: 'azazel',
       name: 'AZAZEL (Jefe)',
+      icon: '😈',
       hp: 45,
       minRank: 7, /* Quinta */
       minLabel: 'Quinta (36+)',

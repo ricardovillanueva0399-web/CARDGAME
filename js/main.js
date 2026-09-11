@@ -6,7 +6,7 @@
 
   function buildClassSelect() {
     var opts = Object.keys(D.CLASSES).map(function (id) {
-      return '<option value="' + id + '">' + D.CLASSES[id].name + '</option>';
+      return '<option value="' + id + '">' + D.CLASSES[id].icon + ' ' + D.CLASSES[id].name + '</option>';
     }).join('');
     return '<select class="class-select">' + opts + '</select>';
   }
@@ -27,7 +27,7 @@
       var updateDesc = function (sel, d) {
         return function () {
           var cls = D.CLASSES[sel.value];
-          d.textContent = cls.summary + ' (' + cls.maxHp + ' HP) - ' + cls.drawback;
+          d.textContent = cls.icon + ' ' + cls.summary + ' (' + cls.maxHp + ' HP) - ' + cls.drawback;
         };
       }(select, desc);
       select.addEventListener('change', updateDesc);

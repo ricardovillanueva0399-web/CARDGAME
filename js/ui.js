@@ -34,10 +34,13 @@
     var isRed = card.color === 'roja';
     var selected = opts.selectedMap && opts.selectedMap[card.id];
     var classes = 'card' + (isRed ? ' red' : '') + (selected ? ' selected' : '') + (opts.disabled ? ' disabled' : '');
+    var suit = SUIT_SYMBOL[card.suit];
     var node = el(
       '<div class="' + classes + '" data-card-id="' + card.id + '">' +
+        '<div class="corner corner-tl"><span>' + card.value + '</span><span>' + suit + '</span></div>' +
         '<div class="val">' + card.value + '</div>' +
-        '<div class="suit">' + SUIT_SYMBOL[card.suit] + '</div>' +
+        '<div class="suit">' + suit + '</div>' +
+        '<div class="corner corner-br"><span>' + card.value + '</span><span>' + suit + '</span></div>' +
         (opts.looseValue ? '<div class="loose-tag">+' + opts.looseValue + '</div>' : '') +
       '</div>'
     );
@@ -53,7 +56,7 @@
       var hpClass = pct > 55 ? 'hp-full' : (pct > 25 ? 'hp-mid' : 'hp-low');
       var chip = el(
         '<div class="player-chip' + (p.id === current.id ? ' current' : '') + (p.alive ? '' : ' dead') + '">' +
-          '<div class="pname">' + escapeHtml(p.name) + (p.isAI ? ' <span class="ai-badge">IA</span>' : '') + '</div>' +
+          '<div class="pname"><span class="class-icon">' + D.CLASSES[p.classId].icon + '</span>' + escapeHtml(p.name) + (p.isAI ? ' <span class="ai-badge">IA</span>' : '') + '</div>' +
           '<div class="pclass">' + D.CLASSES[p.classId].name + '</div>' +
           '<div class="hp-bar-outer"><div class="hp-bar-inner" style="width:' + pct + '%;background:var(--' + hpClass + ')"></div></div>' +
           '<div class="hp-text">' + p.hp + ' / ' + p.maxHp + ' HP</div>' +
@@ -344,7 +347,7 @@
     var pend = game.pending;
     var player = S.byId(game, pend.playerId);
     var wrap = overlayWrap(
-      '<h3>Encuentro: ' + escapeHtml(pend.monsterName) + '</h3>' +
+      '<h3>' + D.MONSTERS[pend.monsterId].icon + ' Encuentro: ' + escapeHtml(pend.monsterName) + '</h3>' +
       '<p>HP del monstruo: <strong>' + pend.hp + '</strong>' + (pend.cofreBoosted ? ' (+5 por Cofre Mimetico)' : '') + '</p>' +
       '<p class="hint">Referencia de dificultad: ' + pend.minLabel + '. La regla real es: dano total &gt;= HP del monstruo.</p>'
     );

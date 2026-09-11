@@ -3,6 +3,8 @@
 (function (global) {
   'use strict';
 
+  var D = global.VA_DATA;
+
   var STEPS = [
     {
       title: 'Que es The Volatile Arena',
@@ -74,9 +76,9 @@
       body:
         '<div class="tut-table-wrap"><table class="tut-table">' +
         '<tr><th>Monstruo</th><th>HP</th><th>Penalizacion</th></tr>' +
-        '<tr><td>Ladron de Sombras</td><td>12</td><td>-5 HP y te roban 1 carta</td></tr>' +
-        '<tr><td>Sombra del Vacio</td><td>30</td><td>-15 HP</td></tr>' +
-        '<tr><td>AZAZEL (Jefe)</td><td>45</td><td>-28 HP</td></tr>' +
+        '<tr><td>' + D.MONSTERS.ladron.icon + ' Ladron de Sombras</td><td>12</td><td>-5 HP y te roban 1 carta</td></tr>' +
+        '<tr><td>' + D.MONSTERS.sombra.icon + ' Sombra del Vacio</td><td>30</td><td>-15 HP</td></tr>' +
+        '<tr><td>' + D.MONSTERS.azazel.icon + ' AZAZEL (Jefe)</td><td>45</td><td>-28 HP</td></tr>' +
         '</table></div>' +
         '<p>Al robar un Monstruo eliges: <strong>Combatir</strong> (formas un ataque con tu ' +
         'mano actual) o <strong>Huir</strong> (penalizacion fija, el monstruo vuelve al ' +
@@ -119,12 +121,12 @@
       body:
         '<div class="tut-table-wrap"><table class="tut-table tut-table-classes">' +
         '<tr><th>Clase</th><th>HP</th><th>Pasiva</th><th>Desventaja</th></tr>' +
-        '<tr><td>Gladiador</td><td>25</td><td>+3 dano en ataques</td><td>HP base baja</td></tr>' +
-        '<tr><td>Espejo</td><td>40</td><td>Refleja 25% del dano (max 8)</td><td>Sin artefactos Escudo</td></tr>' +
-        '<tr><td>Cleptomano</td><td>40</td><td>Roba 1 carta rival al iniciar turno</td><td>Monstruos +4 HP contra el</td></tr>' +
-        '<tr><td>Taumaturgo</td><td>40</td><td>Curaciones x1.5</td><td>-4 dano en ataques</td></tr>' +
-        '<tr><td>Alquimista</td><td>40</td><td>Usa cualquier color al 70%</td><td>Penalizacion fija del 30%</td></tr>' +
-        '<tr><td>Sanguinario</td><td>40</td><td>Recupera HP al hacer dano</td><td>-1 HP cada turno</td></tr>' +
+        '<tr><td>' + D.CLASSES.gladiador.icon + ' Gladiador</td><td>25</td><td>+3 dano en ataques</td><td>HP base baja</td></tr>' +
+        '<tr><td>' + D.CLASSES.espejo.icon + ' Espejo</td><td>40</td><td>Refleja 25% del dano (max 8)</td><td>Sin artefactos Escudo</td></tr>' +
+        '<tr><td>' + D.CLASSES.cleptomano.icon + ' Cleptomano</td><td>40</td><td>Roba 1 carta rival al iniciar turno</td><td>Monstruos +4 HP contra el</td></tr>' +
+        '<tr><td>' + D.CLASSES.taumaturgo.icon + ' Taumaturgo</td><td>40</td><td>Curaciones x1.5</td><td>-4 dano en ataques</td></tr>' +
+        '<tr><td>' + D.CLASSES.alquimista.icon + ' Alquimista</td><td>40</td><td>Usa cualquier color al 70%</td><td>Penalizacion fija del 30%</td></tr>' +
+        '<tr><td>' + D.CLASSES.sanguinario.icon + ' Sanguinario</td><td>40</td><td>Recupera HP al hacer dano</td><td>-1 HP cada turno</td></tr>' +
         '</table></div>'
     },
     {
