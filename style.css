@@ -1,0 +1,154 @@
+:root {
+  --bg: #14131c;
+  --panel: #1e1c2a;
+  --panel-2: #262436;
+  --border: #3a374d;
+  --text: #eee7f5;
+  --muted: #a79fc0;
+  --accent: #c8963e;
+  --accent-2: #7c4dff;
+  --hp-full: #4caf50;
+  --hp-mid: #e0a800;
+  --hp-low: #e0453e;
+  --black-suit: #2b2b2b;
+  --red-suit: #b3261e;
+  --coin: #d9b23a;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: radial-gradient(ellipse at top, #221f30, var(--bg) 65%);
+  color: var(--text);
+  font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+  min-height: 100vh;
+}
+
+#app { max-width: 1100px; margin: 0 auto; padding: 12px 14px 60px; }
+
+#top-bar { text-align: center; padding: 18px 0 10px; }
+#top-bar h1 {
+  margin: 0;
+  letter-spacing: 4px;
+  font-size: 1.7rem;
+  color: var(--accent);
+  text-shadow: 0 0 12px rgba(200,150,62,0.4);
+}
+#top-bar .subtitle { color: var(--muted); font-size: 0.85rem; }
+
+.screen { max-width: 760px; margin: 0 auto; }
+
+.btn {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.btn:hover:not(:disabled) { border-color: var(--accent); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-primary { background: linear-gradient(180deg, var(--accent), #a97a2e); color: #221a0a; font-weight: 600; border: none; }
+.btn-danger { background: #5a2323; border-color: #7a3030; }
+.btn-small { padding: 4px 9px; font-size: 0.78rem; }
+
+.field-row { display: flex; align-items: center; gap: 10px; margin: 10px 0; flex-wrap: wrap; }
+.field-row label { color: var(--muted); min-width: 90px; }
+select, input[type=text] {
+  background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
+  border-radius: 5px; padding: 6px 8px; font-size: 0.9rem;
+}
+
+#player-forms { display: flex; flex-direction: column; gap: 10px; margin: 14px 0; }
+.player-form-row {
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px;
+}
+.player-form-row input[type=text] { flex: 1; min-width: 120px; }
+.class-desc { font-size: 0.75rem; color: var(--muted); flex-basis: 100%; }
+.hint { color: var(--muted); font-size: 0.8rem; margin-top: 14px; }
+
+/* --- Barra de jugadores --- */
+#players-bar { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 10px 0 14px; }
+.player-chip {
+  background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px 10px; min-width: 140px; position: relative;
+}
+.player-chip.current { border-color: var(--accent); box-shadow: 0 0 10px rgba(200,150,62,0.35); }
+.player-chip.dead { opacity: 0.4; }
+.player-chip .pname { font-weight: 600; font-size: 0.88rem; }
+.player-chip .pclass { color: var(--muted); font-size: 0.72rem; }
+.hp-bar-outer { background: #000; border-radius: 5px; height: 9px; margin-top: 5px; overflow: hidden; }
+.hp-bar-inner { height: 100%; background: var(--hp-full); transition: width 0.3s; }
+.hp-text { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+.coin-text { font-size: 0.72rem; color: var(--coin); margin-top: 2px; }
+.artifact-icons { margin-top: 3px; font-size: 0.7rem; color: var(--accent-2); }
+.yep-alert { position: absolute; top: -8px; right: -8px; }
+
+#board { display: flex; flex-direction: column; gap: 12px; }
+
+#log-panel {
+  background: #0f0e16; border: 1px solid var(--border); border-radius: 8px;
+  height: 170px; overflow-y: auto; padding: 8px 10px; font-size: 0.78rem; color: var(--muted);
+}
+#log-list div { padding: 1px 0; border-bottom: 1px dashed #2a2838; }
+
+#action-panel {
+  background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px;
+}
+#phase-banner { font-size: 0.8rem; color: var(--accent); margin-bottom: 8px; min-height: 1em; }
+
+#hand-area { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; min-height: 92px; }
+
+.card {
+  width: 62px; height: 88px; border-radius: 8px; border: 2px solid var(--border);
+  background: linear-gradient(160deg, #fdf9ee, #ece2c8);
+  color: var(--black-suit);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-weight: 700; cursor: pointer; user-select: none; position: relative;
+  transition: transform 0.12s, border-color 0.12s;
+}
+.card:hover { transform: translateY(-4px); }
+.card.selected { border-color: var(--accent-2); transform: translateY(-8px); box-shadow: 0 4px 10px rgba(124,77,255,0.4); }
+.card .val { font-size: 1.5rem; line-height: 1; }
+.card .suit { font-size: 1.1rem; }
+.card.red { color: var(--red-suit); }
+.card.loose-tag {
+  position: absolute; bottom: -8px; background: var(--coin); color: #221a0a;
+  font-size: 0.62rem; border-radius: 4px; padding: 1px 4px; font-weight: 700;
+}
+.card.disabled { opacity: 0.45; cursor: not-allowed; }
+
+#controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+#controls .group { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+#controls .info { font-size: 0.78rem; color: var(--muted); flex-basis: 100%; }
+
+#loot-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; border-top: 1px dashed var(--border); padding-top: 8px; }
+#loot-bar .btn { font-size: 0.72rem; }
+
+/* --- overlays / modales --- */
+#overlay-root:empty { display: none; }
+.overlay {
+  position: fixed; inset: 0; background: rgba(5,4,10,0.82);
+  display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 50;
+}
+.modal {
+  background: var(--panel); border: 1px solid var(--accent); border-radius: 12px;
+  padding: 18px; max-width: 480px; width: 100%; max-height: 85vh; overflow-y: auto;
+}
+.modal h3 { margin-top: 0; color: var(--accent); }
+.shop-item {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  background: var(--panel-2); border: 1px solid var(--border); border-radius: 7px;
+  padding: 7px 9px; margin-bottom: 6px; font-size: 0.8rem;
+}
+.shop-item .desc { color: var(--muted); font-size: 0.7rem; }
+.error-msg { color: var(--hp-low); font-size: 0.8rem; min-height: 1.1em; margin: 6px 0; }
+
+@media (max-width: 480px) {
+  #top-bar h1 { font-size: 1.25rem; letter-spacing: 2px; }
+  .card { width: 52px; height: 74px; }
+  .player-chip { min-width: 120px; }
+}

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Volatile Arena</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+
+  <header id="top-bar">
+    <h1>THE VOLATILE ARENA</h1>
+    <span class="subtitle">Roguelite Competitivo &middot; Marco de Diseno v3.3</span>
+  </header>
+
+  <section id="setup-screen" class="screen">
+    <h2>Preparar Partida</h2>
+    <div class="field-row">
+      <label for="player-count">Numero de jugadores</label>
+      <select id="player-count"></select>
+    </div>
+    <div id="player-forms"></div>
+    <button id="start-game-btn" class="btn btn-primary">Iniciar Partida</button>
+    <p class="hint">Local, pasar y jugar. Cada jugador vera su mano solo cuando le toque.</p>
+  </section>
+
+  <section id="game-screen" class="screen" hidden>
+
+    <div id="players-bar"></div>
+
+    <div id="board">
+      <div id="log-panel"><div id="log-list"></div></div>
+
+      <div id="action-panel">
+        <div id="phase-banner"></div>
+        <div id="hand-area"></div>
+        <div id="controls"></div>
+        <div id="loot-bar"></div>
+      </div>
+    </div>
+
+    <div id="overlay-root"></div>
+
+  </section>
+
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/deck.js"></script>
+<script src="js/hands.js"></script>
+<script src="js/combat.js"></script>
+<script src="js/events.js"></script>
+<script src="js/monsters.js"></script>
+<script src="js/shop.js"></script>
+<script src="js/state.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
