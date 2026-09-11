@@ -69,6 +69,24 @@ select, input[type=text] {
 .player-form-row input[type=text] { flex: 1; min-width: 120px; }
 .class-desc { font-size: 0.75rem; color: var(--muted); flex-basis: 100%; }
 .hint { color: var(--muted); font-size: 0.8rem; margin-top: 14px; }
+.divider { border: none; border-top: 1px solid var(--border); margin: 18px 0 10px; }
+
+.ai-badge {
+  background: var(--accent-2); color: #fff; font-size: 0.62rem; font-weight: 700;
+  border-radius: 4px; padding: 1px 5px; vertical-align: middle;
+}
+
+#coach-panel {
+  display: flex; align-items: flex-start; gap: 8px;
+  background: rgba(124,77,255,0.12); border: 1px solid var(--accent-2);
+  border-radius: 8px; padding: 8px 10px; margin-bottom: 10px;
+  font-size: 0.82rem; line-height: 1.4;
+}
+.coach-icon { font-size: 1rem; flex-shrink: 0; }
+.coach-line {
+  background: rgba(124,77,255,0.12); border: 1px solid var(--accent-2);
+  border-radius: 7px; padding: 7px 9px; font-size: 0.8rem; margin-bottom: 10px;
+}
 
 /* --- Barra de jugadores --- */
 #players-bar { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 10px 0 14px; }

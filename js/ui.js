@@ -53,7 +53,7 @@
       var hpClass = pct > 55 ? 'hp-full' : (pct > 25 ? 'hp-mid' : 'hp-low');
       var chip = el(
         '<div class="player-chip' + (p.id === current.id ? ' current' : '') + (p.alive ? '' : ' dead') + '">' +
-          '<div class="pname">' + escapeHtml(p.name) + '</div>' +
+          '<div class="pname">' + escapeHtml(p.name) + (p.isAI ? ' <span class="ai-badge">IA</span>' : '') + '</div>' +
           '<div class="pclass">' + D.CLASSES[p.classId].name + '</div>' +
           '<div class="hp-bar-outer"><div class="hp-bar-inner" style="width:' + pct + '%;background:var(--' + hpClass + ')"></div></div>' +
           '<div class="hp-text">' + p.hp + ' / ' + p.maxHp + ' HP</div>' +
@@ -104,28 +104,59 @@
     handArea.innerHTML = '';
     controls.innerHTML = '';
     lootBar.innerHTML = '';
+    clearCoach();
 
     var player = S.currentPlayer(game);
 
     if (game.phase === 'action') {
-      banner.textContent = 'Turno de ' + player.name + ' - fase de accion.';
-      renderHandForAction(player, handArea);
-      renderActionControls(player, controls);
-      renderLootBar(player, lootBar);
+      if (player.isAI) {
+        banner.textContent = 'Turno de ' + player.name + ' (IA) - decidiendo su jugada...';
+      } else {
+        banner.textContent = 'Turno de ' + player.name + ' - fase de accion.';
+        renderHandForAction(player, handArea);
+        renderActionControls(player, controls);
+        renderLootBar(player, lootBar);
+        if (game.isTutorial) {
+          var uiState = { declaredType: ui.declaredType, selectedCount: selectedCardIdsArray().length, hasTarget: !!ui.targetId };
+          showCoach(global.VA_COACH.actionHint(player.hand.length > 0, uiState));
+        }
+      }
     } else if (game.phase === 'drawing') {
-      banner.textContent = 'Turno de ' + player.name + ' - robando cartas...';
+      banner.textContent = 'Turno de ' + player.name + (player.isAI ? ' (IA)' : '') + ' - robando cartas...';
     } else if (game.phase === 'end_of_turn') {
-      banner.textContent = 'Turno de ' + player.name + ' - fin de turno: convierte cartas sueltas en Monedas si quieres.';
-      renderHandForDiscard(player, handArea);
-      var endBtn = el('<button class="btn btn-primary">Terminar turno</button>');
-      endBtn.addEventListener('click', function () {
-        S.finishEndOfTurn(game, player.id);
-        renderAll();
-      });
-      controls.appendChild(endBtn);
+      if (player.isAI) {
+        banner.textContent = 'Turno de ' + player.name + ' (IA) - terminando su turno...';
+      } else {
+        banner.textContent = 'Turno de ' + player.name + ' - fin de turno: convierte cartas sueltas en Monedas si quieres.';
+        renderHandForDiscard(player, handArea);
+        var endBtn = el('<button class="btn btn-primary">Terminar turno</button>');
+        endBtn.addEventListener('click', function () {
+          S.finishEndOfTurn(game, player.id);
+          renderAll();
+        });
+        controls.appendChild(endBtn);
+        if (game.isTutorial) {
+          var hasLoose = player.hand.some(function (c) { return S.isCardLoose(player.hand, c); });
+          showCoach(global.VA_COACH.endOfTurnHint(hasLoose));
+        }
+      }
     } else {
       banner.textContent = '';
     }
+  }
+
+  function showCoach(text) {
+    var panel = document.getElementById('coach-panel');
+    if (!panel) return;
+    panel.hidden = false;
+    panel.innerHTML = '<span class="coach-icon">&#128161;</span><span>' + escapeHtml(text) + '</span>';
+  }
+
+  function clearCoach() {
+    var panel = document.getElementById('coach-panel');
+    if (!panel) return;
+    panel.hidden = true;
+    panel.innerHTML = '';
   }
 
   function renderHandForAction(player, handArea) {
@@ -319,6 +350,10 @@
     );
     var modal = wrap.querySelector('.modal');
 
+    if (game.isTutorial && !player.isAI) {
+      modal.appendChild(el('<p class="coach-line">' + escapeHtml(global.VA_COACH.monsterHint(pend, ui.fightMode, Object.keys(ui.fightSelectedIds).length)) + '</p>'));
+    }
+
     if (!ui.fightMode) {
       var fightBtn = el('<button class="btn btn-primary">Combatir</button>');
       var fleeBtn = el('<button class="btn"' + (pend.canFlee ? '' : ' disabled') + '>Huir' + (pend.canFlee ? '' : ' (no permitido)') + '</button>');
@@ -384,6 +419,10 @@
       '<p>Turno de <strong>' + escapeHtml(player.name) + '</strong> &middot; ' + player.coins + ' Monedas &middot; Artefactos: ' + player.artifacts.length + '/' + D.MAX_ARTIFACTS + '</p>'
     );
     var modal = wrap.querySelector('.modal');
+
+    if (game.isTutorial && !player.isAI) {
+      modal.appendChild(el('<p class="coach-line">' + escapeHtml(global.VA_COACH.shopHint()) + '</p>'));
+    }
 
     modal.appendChild(el('<h4>Botin (uso unico)</h4>'));
     Object.keys(D.LOOT).forEach(function (id) {
@@ -453,6 +492,11 @@
       '<p>Turno de <strong>' + escapeHtml(player.name) + '</strong>: elige 1 carta para pasar a tu izquierda.</p>'
     );
     var modal = wrap.querySelector('.modal');
+
+    if (game.isTutorial && !player.isAI) {
+      modal.appendChild(el('<p class="coach-line">' + escapeHtml(global.VA_COACH.mercadoHint()) + '</p>'));
+    }
+
     if (player.hand.length === 0) {
       modal.appendChild(el('<p class="info">No tiene cartas para entregar.</p>'));
       var skipBtn = el('<button class="btn btn-primary">Continuar</button>');
@@ -488,6 +532,11 @@
       '<p>' + escapeHtml(player.name) + ', elige tu recompensa:</p>'
     );
     var modal = wrap.querySelector('.modal');
+
+    if (game.isTutorial && !player.isAI) {
+      modal.appendChild(el('<p class="coach-line">' + escapeHtml(global.VA_COACH.azazelHint()) + '</p>'));
+    }
+
     var btn1 = el('<button class="btn btn-primary" style="display:block;margin-bottom:8px;width:100%">+' + bonus + ' HP maximo permanente</button>');
     var btn2 = el('<button class="btn" style="display:block;width:100%">' + count + ' Cartas Raras (botin/artefactos al azar)</button>');
     btn1.addEventListener('click', function () {
@@ -510,6 +559,7 @@
     renderLog();
     renderActionPanel();
     renderOverlay();
+    if (game.isTutorial) global.VA_AI.tick(game, renderAll);
   }
 
   global.VA_UI = {

@@ -7,12 +7,13 @@
   var HANDS = global.VA_HANDS;
   var COMBAT = global.VA_COMBAT;
 
-  function makePlayer(id, name, classId) {
+  function makePlayer(id, name, classId, isAI) {
     var cls = D.CLASSES[classId];
     return {
       id: id,
       name: name,
       classId: classId,
+      isAI: !!isAI,
       maxHp: cls.maxHp,
       hp: cls.maxHp,
       coins: 0,
@@ -31,7 +32,7 @@
   function createGame(playerDefs) {
     var game = {
       players: playerDefs.map(function (def, idx) {
-        return makePlayer('p' + idx, def.name, def.classId);
+        return makePlayer('p' + idx, def.name, def.classId, def.isAI);
       }),
       order: playerDefs.map(function (def, idx) { return 'p' + idx; }),
       turnIndex: 0,
@@ -43,7 +44,8 @@
       drawContext: null,
       flags: { cofreMimetico: false, nieblaTurnsLeft: 0 },
       gameOver: false,
-      winnerId: null
+      winnerId: null,
+      isTutorial: false
     };
     return game;
   }

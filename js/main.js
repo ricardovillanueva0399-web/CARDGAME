@@ -66,15 +66,31 @@
     document.getElementById('how-to-play-btn-game').addEventListener('click', function () {
       global.VA_TUTORIAL.open();
     });
+    document.getElementById('start-tutorial-btn').addEventListener('click', startTutorial);
   }
 
-  function startGame(defs) {
+  function startGame(defs, opts) {
+    opts = opts || {};
     var game = global.VA_STATE.createGame(defs);
+    game.isTutorial = !!opts.tutorial;
     global.VA_UI.setGame(game);
     document.getElementById('setup-screen').hidden = true;
     document.getElementById('game-screen').hidden = false;
     global.VA_STATE.requestPassDevice(game);
     global.VA_UI.renderAll();
+  }
+
+  function startTutorial() {
+    var firstRow = document.querySelector('.player-form-row');
+    var humanName = (firstRow.querySelector('.name-input').value.trim()) || 'Tu';
+    var humanClass = firstRow.querySelector('.class-select').value;
+    var classIds = Object.keys(D.CLASSES);
+    var aiClass = classIds[Math.floor(Math.random() * classIds.length)];
+    var defs = [
+      { name: humanName, classId: humanClass },
+      { name: 'IA', classId: aiClass, isAI: true }
+    ];
+    startGame(defs, { tutorial: true });
   }
 
   document.addEventListener('DOMContentLoaded', initSetupScreen);

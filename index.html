@@ -26,6 +26,10 @@
       <button id="how-to-play-btn" class="btn">Como jugar</button>
     </div>
     <p class="hint">Local, pasar y jugar. Cada jugador vera su mano solo cuando le toque.</p>
+    <hr class="divider">
+    <h3>Aprender jugando</h3>
+    <p class="hint">Usa el nombre y la clase del Jugador 1 de arriba y juega una partida guiada contra una IA: ella juega sus turnos sola y el juego te va diciendo que hacer en los tuyos.</p>
+    <button id="start-tutorial-btn" class="btn">Modo Tutorial (vs IA)</button>
   </section>
 
   <section id="game-screen" class="screen" hidden>
@@ -37,6 +41,7 @@
 
       <div id="action-panel">
         <div id="phase-banner"></div>
+        <div id="coach-panel" hidden></div>
         <div id="hand-area"></div>
         <div id="controls"></div>
         <div id="loot-bar"></div>
@@ -63,6 +68,8 @@
 <script src="js/shop.js"></script>
 <script src="js/state.js"></script>
 <script src="js/tutorial.js"></script>
+<script src="js/coach.js"></script>
+<script src="js/ai.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/main.js"></script>
 </body>

@@ -29,9 +29,37 @@ js/events.js          Efectos de las 6 cartas de Suceso
 js/monsters.js        Encuentros con los 3 Monstruos de Emboscada
 js/shop.js            Tienda de la Arena
 js/state.js           Motor de turnos y estado de partida
+js/tutorial.js         Panel de referencia estático "Cómo jugar" (10 pasos)
+js/coach.js            Textos de pista contextuales del Modo Tutorial
+js/ai.js               IA que juega turnos completos en el Modo Tutorial
 js/ui.js              Renderizado e interacción con el DOM
 js/main.js            Pantalla de configuración y arranque
 ```
+
+## Modo Tutorial (jugar contra la IA)
+
+Desde la pantalla de preparación, el botón **"Modo Tutorial (vs IA)"** arranca una
+partida de 2 jugadores usando el nombre y la clase que hayas puesto en la fila del
+Jugador 1: tú contra una IA con una clase aleatoria.
+
+- La IA (`js/ai.js`) juega turnos completos por su cuenta: elige atacar o curarse
+  segun su HP, forma la mejor combinación simple que tenga en mano (el grupo de
+  cartas del mismo valor más grande), decide si combatir o huir de un monstruo
+  comparando el daño estimado contra su HP, compra en la Tienda, y responde a
+  Mercado Negro y a la elección de AZAZEL. No es una IA óptima: usa una heurística
+  simple pensada para ser un rival razonable de práctica, no para jugar perfecto.
+- Mientras es tu turno, un panel de pistas (`js/coach.js`) te va diciendo qué hacer
+  a continuación — no es un guion fijo con cartas concretas (el mazo es aleatorio en
+  cada partida), sino un mensaje que se recalcula según tu mano y la fase actual:
+  qué botón pulsar, cuándo elegir objetivo, qué hacer ante un monstruo o en la
+  Tienda, etc.
+- La pantalla de "pasa el dispositivo" se salta automáticamente en este modo (solo
+  hay un humano jugando, no hace falta ocultar la pantalla entre turnos).
+
+El panel de referencia estático **"Cómo jugar"** (`js/tutorial.js`, ya presente antes
+de este modo) sigue disponible aparte, tanto en la pantalla de preparación como
+durante cualquier partida, como una chuleta de reglas independiente del estado de
+juego.
 
 ## Decisiones de diseño donde el documento original era ambiguo o incompleto
 
