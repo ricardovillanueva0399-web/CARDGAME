@@ -59,6 +59,13 @@
       });
       startGame(defs);
     });
+
+    document.getElementById('how-to-play-btn').addEventListener('click', function () {
+      global.VA_TUTORIAL.open();
+    });
+    document.getElementById('how-to-play-btn-game').addEventListener('click', function () {
+      global.VA_TUTORIAL.open();
+    });
   }
 
   function startGame(defs) {

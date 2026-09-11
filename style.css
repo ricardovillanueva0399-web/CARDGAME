@@ -147,8 +147,37 @@ select, input[type=text] {
 .shop-item .desc { color: var(--muted); font-size: 0.7rem; }
 .error-msg { color: var(--hp-low); font-size: 0.8rem; min-height: 1.1em; margin: 6px 0; }
 
+/* --- Tutorial "Como Jugar" --- */
+.tut-modal { max-width: 560px; }
+.tut-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 4px;
+}
+.tut-step-count { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; }
+.tut-body { font-size: 0.85rem; line-height: 1.5; }
+.tut-body p { margin: 8px 0; }
+.tut-body ul, .tut-body ol { margin: 8px 0; padding-left: 20px; }
+.tut-body li { margin: 3px 0; }
+.tut-warn { color: var(--accent); }
+.tut-note { color: var(--muted); font-size: 0.78rem; }
+.tut-table-wrap { overflow-x: auto; margin: 10px 0; }
+.tut-table { border-collapse: collapse; width: 100%; font-size: 0.78rem; }
+.tut-table th, .tut-table td {
+  border: 1px solid var(--border); padding: 5px 8px; text-align: left; white-space: nowrap;
+}
+.tut-table th { background: var(--panel-2); color: var(--accent); }
+.tut-table-classes td, .tut-table-classes th { white-space: normal; }
+.tut-dots { display: flex; justify-content: center; gap: 6px; margin: 14px 0 10px; }
+.tut-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--border);
+  cursor: pointer; display: inline-block;
+}
+.tut-dot.active { background: var(--accent); }
+.tut-nav { display: flex; justify-content: space-between; gap: 8px; }
+
 @media (max-width: 480px) {
   #top-bar h1 { font-size: 1.25rem; letter-spacing: 2px; }
   .card { width: 52px; height: 74px; }
   .player-chip { min-width: 120px; }
+  .tut-table { font-size: 0.7rem; }
 }

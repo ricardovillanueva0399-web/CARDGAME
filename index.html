@@ -21,7 +21,10 @@
       <select id="player-count"></select>
     </div>
     <div id="player-forms"></div>
-    <button id="start-game-btn" class="btn btn-primary">Iniciar Partida</button>
+    <div class="field-row">
+      <button id="start-game-btn" class="btn btn-primary">Iniciar Partida</button>
+      <button id="how-to-play-btn" class="btn">Como jugar</button>
+    </div>
     <p class="hint">Local, pasar y jugar. Cada jugador vera su mano solo cuando le toque.</p>
   </section>
 
@@ -37,12 +40,17 @@
         <div id="hand-area"></div>
         <div id="controls"></div>
         <div id="loot-bar"></div>
+        <div class="field-row">
+          <button id="how-to-play-btn-game" class="btn btn-small">Como jugar</button>
+        </div>
       </div>
     </div>
 
     <div id="overlay-root"></div>
 
   </section>
+
+  <div id="tutorial-root"></div>
 
 </div>
 
@@ -54,6 +62,7 @@
 <script src="js/monsters.js"></script>
 <script src="js/shop.js"></script>
 <script src="js/state.js"></script>
+<script src="js/tutorial.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/main.js"></script>
 </body>
