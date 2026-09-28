@@ -107,31 +107,37 @@
     vortice: {
       id: 'vortice',
       name: 'Vortice Temporal',
+      icon: '🌀',
       desc: 'El orden de turnos se invierte.'
     },
     caceria: {
       id: 'caceria',
       name: 'Llamada de la Caceria',
+      icon: '🏹',
       desc: 'El jugador activo debe combatir inmediatamente el proximo monstruo de su mazo. No puede huir.'
     },
     impuesto: {
       id: 'impuesto',
       name: 'Impuesto Revolucionario',
+      icon: '💰',
       desc: 'El jugador activo entrega floor(monedas/2) al siguiente jugador.'
     },
     cofre: {
       id: 'cofre',
       name: 'Cofre Mimetico',
+      icon: '🎁',
       desc: 'El proximo monstruo derrotado da el doble de recompensa, pero tiene +5 HP.'
     },
     mercado: {
       id: 'mercado',
       name: 'Mercado Negro',
+      icon: '🃏',
       desc: 'Todos los jugadores pasan 1 carta de su mano al jugador de su izquierda.'
     },
     niebla: {
       id: 'niebla',
       name: 'Niebla de Guerra',
+      icon: '🌫️',
       desc: 'Ninguna carta de Botin puede usarse hasta que pase una ronda completa.'
     }
   };

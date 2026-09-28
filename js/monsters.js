@@ -33,6 +33,7 @@
      */
     if (!canFlee && !hasAnyAttackableCard(player)) {
       s.logMsg(game, player.name + ' se encuentra con ' + base.name + ' (' + hp + ' HP) sin ninguna carta util para atacar: pierde el combate por defecto.');
+      s.pushFx(game, { type: 'monster_fight', playerId: player.id, monsterId: base.id, win: false, amount: 0, hp: hp });
       applyLosePenalty(game, player, base.id);
       reinsertMonster(game, player, base.id);
       /*
@@ -197,6 +198,7 @@
     if (choice === 'flee') {
       if (!pend.canFlee) return { ok: false, error: 'No puedes huir de este combate.' };
       game.pending = null;
+      s.pushFx(game, { type: 'monster_flee', playerId: player.id, monsterId: monsterId });
       applyLosePenalty(game, player, monsterId);
       reinsertMonster(game, player, monsterId);
       if (s.endTurnIfPlayerDied(game, player)) return { ok: true };
@@ -222,6 +224,10 @@
       var out = combat().resolveMonsterAttack(player, fakeMonster, result, { useDaga: !!useDaga });
       if (useDaga) s.consumeLoot(player, 'daga');
       out.log.forEach(function (l) { s.logMsg(game, l); });
+      s.pushFx(game, {
+        type: 'monster_fight', playerId: player.id, monsterId: monsterId, win: out.win,
+        amount: out.damage, hp: monsterHp, levelName: result.levelName
+      });
 
       selected.concat(result.wastedCards).forEach(function (c) {
         player.hand = player.hand.filter(function (h) { return h.id !== c.id; });

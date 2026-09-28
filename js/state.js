@@ -45,7 +45,8 @@
       flags: { cofreMimetico: false, nieblaTurnsLeft: 0 },
       gameOver: false,
       winnerId: null,
-      isTutorial: false
+      isTutorial: false,
+      fxQueue: []
     };
     return game;
   }
@@ -53,6 +54,11 @@
   function logMsg(game, msg) {
     game.log.push(msg);
     if (game.log.length > 300) game.log.shift();
+  }
+
+  /* Eventos puramente visuales para la interfaz (animaciones). No afectan a las reglas. */
+  function pushFx(game, evt) {
+    if (game.fxQueue) game.fxQueue.push(evt);
   }
 
   function byId(game, id) {
@@ -106,11 +112,13 @@
       player.artifacts = player.artifacts.filter(function (a) { return a !== 'capa'; });
       player.hp = 12;
       logMsg(game, player.name + ' cae a 0 HP pero la Capa del Fenix lo revive con 12 HP.');
+      pushFx(game, { type: 'revive', playerId: player.id });
       return false;
     }
     player.alive = false;
     player.hp = 0;
     logMsg(game, player.name + ' ha sido eliminado.');
+    pushFx(game, { type: 'death', playerId: player.id });
     return true;
   }
 
@@ -164,6 +172,7 @@
 
       if (card.kind === 'event') {
         logMsg(game, player.name + ' roba un Suceso: ' + card.name + '.');
+        pushFx(game, { type: 'event_card', eventId: card.eventId, playerId: player.id });
         player.deck.discardPile.push(card);
         global.VA_EVENTS.apply(game, player, card);
         if (game._turnEnded) { game._turnEnded = false; return; }
@@ -286,12 +295,19 @@
       if (!defender || !defender.alive) return { ok: false, error: 'Objetivo invalido.' };
       var atkOut = COMBAT.resolveAttack(player, defender, result, { useDaga: !!useDaga });
       log = atkOut.log;
+      pushFx(game, {
+        type: 'attack', attackerId: player.id, targetId: defender.id,
+        amount: atkOut.damage, reflect: atkOut.reflect, levelId: result.levelId, levelName: result.levelName
+      });
       if (useDaga) consumeLoot(player, 'daga');
       killOrRevive(game, defender);
       killOrRevive(game, player);
     } else {
       var healOut = COMBAT.resolveHeal(player, result);
       log = healOut.log;
+      pushFx(game, {
+        type: 'heal', playerId: player.id, amount: healOut.healed, levelId: result.levelId, levelName: result.levelName
+      });
     }
 
     selected.concat(result.wastedCards).forEach(function (c) {
@@ -445,6 +461,7 @@
     consumeLoot: consumeLoot,
     activateLoot: activateLoot,
     useYep: useYep,
-    logMsg: logMsg
+    logMsg: logMsg,
+    pushFx: pushFx
   };
 })(window);

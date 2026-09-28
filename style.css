@@ -119,6 +119,7 @@ select:focus, input[type=text]:focus { outline: none; border-color: var(--accent
   font-size: 0.85rem; line-height: 1.45;
   animation: coach-in 0.25s ease-out;
 }
+#coach-panel[hidden] { display: none; }
 .coach-icon { font-size: 1.05rem; flex-shrink: 0; }
 .coach-line {
   background: rgba(124,77,255,0.14); border: 1px solid var(--accent-2);
@@ -137,8 +138,13 @@ select:focus, input[type=text]:focus { outline: none; border-color: var(--accent
 .player-chip.dead { opacity: 0.4; filter: grayscale(0.6); }
 .player-chip .pname { font-weight: 700; font-size: 0.92rem; }
 .player-chip .pclass { color: var(--muted); font-size: 0.74rem; }
-.hp-bar-outer { background: #000; border-radius: 5px; height: 10px; margin-top: 6px; overflow: hidden; }
-.hp-bar-inner { height: 100%; background: var(--hp-full); transition: width 0.35s ease, background 0.35s ease; }
+.hp-bar-outer { background: #000; border-radius: 5px; height: 10px; margin-top: 6px; overflow: hidden; position: relative; }
+.hp-bar-inner { position: relative; z-index: 1; height: 100%; background: var(--hp-full); transition: width 0.35s ease, background 0.35s ease; }
+/* Barra "fantasma": se queda un instante en el valor anterior y luego baja, mostrando el trozo de vida perdido. */
+.hp-bar-ghost {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  background: rgba(255,255,255,0.6); transition: width 0.6s ease;
+}
 .hp-text { font-size: 0.72rem; color: var(--muted); margin-top: 3px; }
 .coin-text { font-size: 0.74rem; color: var(--coin); margin-top: 2px; }
 .artifact-icons { margin-top: 3px; font-size: 0.7rem; color: var(--accent-2); }
@@ -312,3 +318,243 @@ select:focus, input[type=text]:focus { outline: none; border-color: var(--accent
   .tut-table { font-size: 0.7rem; }
   #setup-screen { padding: 16px; }
 }
+
+/* ================= Animaciones y efectos ================= */
+
+:root { --join: 34px; }
+@media (min-width: 900px) { :root { --join: 40px; } }
+@media (min-width: 1300px) { :root { --join: 44px; } }
+@media (max-width: 480px) { :root { --join: 26px; } }
+
+#fx-layer { position: fixed; inset: 0; pointer-events: none; z-index: 70; overflow: hidden; }
+
+.player-chip { transition: opacity 0.5s, filter 0.5s, border-color 0.2s, box-shadow 0.2s; }
+.player-chip.fx-dying { animation: fx-dying 0.8s ease-out; }
+
+/* --- Cartas: reparto, union en combinaciones --- */
+.card.deal-in { animation: fx-deal 0.45s cubic-bezier(.2,.9,.3,1.2) backwards; }
+.card.linked {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(200,150,62,0.55), 0 0 16px rgba(200,150,62,0.55);
+}
+.card.linked-join { margin-left: calc(var(--join) * -1); }
+.card.link-in { animation: fx-link-glow 0.45s ease-out; }
+.card.linked-join.link-in { animation: fx-link-snap 0.38s cubic-bezier(.3,1.6,.5,1), fx-link-glow 0.45s ease-out; }
+
+@keyframes fx-deal {
+  from { opacity: 0; transform: translate(40px, -30px) rotate(12deg) scale(0.7); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes fx-link-snap {
+  from { margin-left: 0; }
+  to { margin-left: calc(var(--join) * -1); }
+}
+@keyframes fx-link-glow {
+  0% { box-shadow: 0 0 0 3px rgba(255,215,120,0.95), 0 0 34px rgba(255,215,120,0.95); }
+  100% { box-shadow: 0 0 0 2px rgba(200,150,62,0.55), 0 0 16px rgba(200,150,62,0.55); }
+}
+
+.fx-card-clone { position: absolute !important; margin: 0 !important; transition: none !important; animation: none !important; }
+
+/* --- Sacudidas --- */
+.fx-shake { animation: fx-shake 0.38s ease-in-out; }
+.fx-shake-big { animation: fx-shake-big 0.5s ease-in-out; }
+@keyframes fx-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(2px); }
+}
+@keyframes fx-shake-big {
+  0%, 100% { transform: translate(0, 0); }
+  15% { transform: translate(-9px, 3px) rotate(-0.6deg); }
+  30% { transform: translate(8px, -3px) rotate(0.6deg); }
+  45% { transform: translate(-6px, 2px); }
+  60% { transform: translate(5px, -2px); }
+  80% { transform: translate(-2px, 1px); }
+}
+@keyframes fx-dying {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.06) rotate(-2deg); }
+  100% { transform: scale(0.96); }
+}
+
+/* --- Numeros flotantes --- */
+.fx-float {
+  position: absolute; transform: translate(-50%, -50%);
+  font-weight: 900; font-size: 1.5rem; white-space: nowrap;
+  text-shadow: 0 2px 0 rgba(0,0,0,0.65), 0 0 10px currentColor;
+  animation: fx-rise 1.3s ease-out forwards;
+}
+.fx-float.fx-dmg { color: #ff6b5e; font-size: 1.85rem; }
+.fx-float.fx-heal { color: #7ee787; }
+.fx-float.fx-coin { color: var(--coin); font-size: 1.05rem; }
+.fx-float.fx-skull { font-size: 2.2rem; text-shadow: none; }
+@keyframes fx-rise {
+  0% { opacity: 0; transform: translate(-50%, -30%) scale(0.6); }
+  15% { opacity: 1; transform: translate(-50%, -60%) scale(1.25); }
+  30% { transform: translate(-50%, -70%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -190%) scale(0.95); }
+}
+
+/* --- Orbes (ataque, curacion, reflejo) --- */
+.fx-orb { position: absolute; left: 0; top: 0; width: 24px; height: 24px; border-radius: 50%; will-change: transform; }
+.fx-orb.fx-attack {
+  background: radial-gradient(circle at 35% 35%, #fff6d8, #ffb347 40%, #e0453e 75%);
+  box-shadow: 0 0 14px 6px rgba(255,120,60,0.75), 0 0 30px 10px rgba(224,69,62,0.45);
+}
+.fx-orb.fx-heal {
+  background: radial-gradient(circle at 35% 35%, #f3fff4, #8ef59a 40%, #2e9e3a 80%);
+  box-shadow: 0 0 14px 6px rgba(126,231,135,0.75), 0 0 28px 10px rgba(46,158,58,0.4);
+}
+.fx-orb.fx-reflect {
+  width: 16px; height: 16px;
+  background: radial-gradient(circle, #efe6ff, #9d7bff 50%, #5a2fd6);
+  box-shadow: 0 0 12px 5px rgba(124,77,255,0.7);
+}
+.fx-orb.fx-trail { width: 15px; height: 15px; box-shadow: none; filter: blur(1px); }
+
+/* --- Estallidos, chispas, destellos --- */
+.fx-ring {
+  position: absolute; width: 18px; height: 18px; border-radius: 50%; border: 3px solid #ff8a4c;
+  transform: translate(-50%, -50%); animation: fx-ring 0.6s ease-out forwards;
+}
+.fx-ring.fx-heal { border-color: #7ee787; }
+.fx-ring.fx-reflect { border-color: #9d7bff; }
+.fx-ring.fx-gold { border-color: #ffd36b; }
+.fx-ring.fx-fire { border-color: #ff9d2e; }
+@keyframes fx-ring {
+  from { opacity: 1; transform: translate(-50%, -50%) scale(0.3); }
+  to { opacity: 0; transform: translate(-50%, -50%) scale(5.5); }
+}
+.fx-particle { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: #ffb347; box-shadow: 0 0 6px #ff7043; }
+.fx-particle.fx-heal { background: #8ef59a; box-shadow: 0 0 6px #4caf50; }
+.fx-particle.fx-reflect { background: #b69cff; box-shadow: 0 0 6px #7c4dff; }
+.fx-particle.fx-gold { background: #ffd36b; box-shadow: 0 0 6px #d9b23a; }
+.fx-particle.fx-fire { background: #ff9d2e; box-shadow: 0 0 8px #ff5a1f; }
+.fx-spark { position: absolute; font-weight: 900; font-size: 1.1rem; color: #8ef59a; text-shadow: 0 0 8px rgba(126,231,135,0.9); }
+.fx-core {
+  position: absolute; width: 44px; height: 44px; border-radius: 50%;
+  transform: translate(-50%, -50%); animation: fx-core 0.55s ease-out forwards;
+  background: radial-gradient(circle, #fff, #ffb347 45%, transparent 70%);
+}
+.fx-core.fx-heal { background: radial-gradient(circle, #fff, #8ef59a 45%, transparent 70%); }
+@keyframes fx-core {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3); }
+  30% { opacity: 1; transform: translate(-50%, -50%) scale(1.5); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(2.2); }
+}
+.fx-flash { position: absolute; border-radius: var(--radius); animation: fx-flash 0.55s ease-out forwards; }
+.fx-flash.fx-dmg { background: rgba(224,69,62,0.55); box-shadow: 0 0 24px rgba(224,69,62,0.7); }
+.fx-flash.fx-heal { background: rgba(76,175,80,0.4); box-shadow: 0 0 24px rgba(76,175,80,0.6); }
+.fx-vignette { position: absolute; width: 100%; height: 100%; animation: fx-flash 0.7s ease-out forwards; }
+.fx-vignette.fx-dmg { background: radial-gradient(ellipse at center, transparent 45%, rgba(224,40,40,0.45) 100%); }
+@keyframes fx-flash { from { opacity: 1; } to { opacity: 0; } }
+
+/* --- Nombre de la jugada que salta --- */
+.fx-combo {
+  position: absolute; transform: translate(-50%, -100%); text-align: center; white-space: nowrap;
+  animation: fx-combo 1.25s ease-out forwards;
+}
+.fx-combo-main {
+  display: block; font-size: 1.55rem; font-weight: 900; letter-spacing: 2px;
+  color: #ffd98a; text-shadow: 0 0 12px rgba(255,190,80,0.8), 0 2px 0 #6b4a10;
+}
+.fx-combo.fx-heal .fx-combo-main { color: #b9f6c0; text-shadow: 0 0 12px rgba(76,175,80,0.9), 0 2px 0 #1d5a22; }
+.fx-combo-sub { display: block; font-size: 0.8rem; font-weight: 700; color: var(--text); text-shadow: 0 1px 4px rgba(0,0,0,0.9); }
+@keyframes fx-combo {
+  0% { opacity: 0; transform: translate(-50%, -100%) scale(0.4); }
+  18% { opacity: 1; transform: translate(-50%, -100%) scale(1.18); }
+  30% { transform: translate(-50%, -100%) scale(1); }
+  75% { opacity: 1; transform: translate(-50%, -125%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -150%) scale(0.95); }
+}
+
+/* --- Carteles (sucesos, monstruo derrotado, eliminaciones) --- */
+#fx-banners {
+  position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 8px; width: min(92vw, 520px);
+}
+.fx-banner {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  background: rgba(30,28,42,0.96); border: 1px solid var(--accent); border-radius: 12px;
+  padding: 10px 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-size: 0.88rem; color: var(--text);
+  animation-name: fx-banner; animation-timing-function: ease; animation-fill-mode: both;
+}
+.fx-banner small { display: block; color: var(--muted); font-size: 0.76rem; margin-top: 2px; }
+.fx-banner-icon { font-size: 1.7rem; line-height: 1; }
+.fx-banner.fx-event { border-color: var(--accent-2); box-shadow: 0 0 0 1px rgba(124,77,255,0.4), 0 10px 30px rgba(0,0,0,0.5); }
+.fx-banner.fx-gold { border-color: var(--coin); }
+.fx-banner.fx-dmg { border-color: var(--hp-low); }
+@keyframes fx-banner {
+  0% { opacity: 0; transform: translateY(-24px) scale(0.96); }
+  8% { opacity: 1; transform: none; }
+  88% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translateY(-12px); }
+}
+
+/* --- Monstruo en el centro durante el combate --- */
+.fx-stage {
+  position: absolute; left: 50% !important; top: 40% !important; transform: translate(-50%, -50%);
+  text-align: center; padding: 20px 40px;
+  animation: fx-stage-in 0.35s cubic-bezier(.2,.9,.3,1.3) both;
+}
+.fx-stage::before {
+  content: ''; position: absolute; inset: -50px; z-index: -1;
+  background: radial-gradient(circle, rgba(10,8,18,0.8), transparent 70%);
+}
+.fx-stage-icon {
+  display: inline-block; font-size: 104px; line-height: 1;
+  filter: drop-shadow(0 8px 20px rgba(0,0,0,0.6)); animation: fx-bob 1.4s ease-in-out infinite;
+}
+.fx-stage-name { margin-top: 6px; font-weight: 800; color: var(--text); text-shadow: 0 2px 8px rgba(0,0,0,0.8); }
+.fx-stage-label { margin-top: 8px; font-size: 1.6rem; font-weight: 900; letter-spacing: 1px; opacity: 0; text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
+.fx-stage-label.show { animation: fx-label-pop 0.45s cubic-bezier(.2,.9,.3,1.4) forwards; }
+.fx-stage-label.fx-gold { color: #ffd36b; }
+.fx-stage-label.fx-dmg { color: #ff6b5e; }
+.fx-stage-label.fx-info { color: var(--muted); }
+.fx-stage-icon.fx-shake-big { animation: fx-shake-big 0.5s ease-in-out; }
+.fx-stage-icon.fx-stage-defeat { animation: fx-defeat 0.7s ease-in forwards; }
+.fx-stage-icon.fx-stage-resist { animation: fx-resist 0.6s ease-in-out; }
+.fx-stage.fx-stage-out { animation: fx-stage-out 0.35s ease-in forwards; }
+@keyframes fx-stage-in {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.4); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+@keyframes fx-stage-out { to { opacity: 0; transform: translate(-50%, -50%) scale(0.85); } }
+@keyframes fx-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@keyframes fx-defeat {
+  0% { transform: scale(1) rotate(0); opacity: 1; filter: brightness(1); }
+  40% { transform: scale(1.3) rotate(-10deg); filter: brightness(2.2); }
+  100% { transform: scale(0.1) rotate(40deg); opacity: 0; }
+}
+@keyframes fx-resist {
+  0%, 100% { transform: rotate(0) scale(1); }
+  25% { transform: rotate(-12deg) scale(1.1); }
+  50% { transform: rotate(10deg) scale(1.12); }
+  75% { transform: rotate(-6deg) scale(1.05); }
+}
+@keyframes fx-label-pop { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+
+/* --- Entrada de ventanas (solo cuando cambian, no en cada re-render) --- */
+.overlay.enter { animation: fx-fade-in 0.2s ease-out; }
+.overlay.enter .modal { animation: fx-modal-in 0.3s cubic-bezier(.2,.9,.3,1.2); }
+.monster-icon { display: inline-block; animation: fx-bob 1.6s ease-in-out infinite; }
+@keyframes fx-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fx-modal-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Quien pidio reducir movimiento en su sistema ve los mismos avisos, pero sin desplazamientos. */
+@media (prefers-reduced-motion: reduce) {
+  .card.deal-in, .card.link-in, .card.linked-join.link-in, .fx-shake, .fx-shake-big,
+  .player-chip.fx-dying, .overlay.enter, .overlay.enter .modal, .fx-stage, .fx-stage-icon,
+  .fx-stage-icon.fx-stage-defeat, .fx-stage-icon.fx-stage-resist, .monster-icon { animation: none !important; }
+  .fx-stage-label.show { animation: none; opacity: 1; }
+  .fx-float, .fx-combo { animation: fx-fade-only 1.2s ease-out forwards; }
+  .fx-banner { animation-name: fx-fade-only; }
+  .hp-bar-inner, .hp-bar-ghost { transition: none; }
+}
+@keyframes fx-fade-only { 0% { opacity: 0; } 15% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }

@@ -7,8 +7,27 @@
 
   var SUIT_SYMBOL = { picas: '♠', treboles: '♣', corazones: '♥', diamantes: '♦' };
 
+  var FX = global.VA_FX;
+
   var game = null;
-  var ui = { selectedCardIds: {}, declaredType: null, targetId: null, useDaga: false, error: '', fightSelectedIds: {}, fightUseDaga: false, fightMode: false };
+  var ui = {
+    selectedCardIds: {}, declaredType: null, targetId: null, useDaga: false, error: '',
+    fightSelectedIds: {}, fightUseDaga: false, fightMode: false,
+    lastLinked: {}, lastComboKey: ''
+  };
+
+  /*
+   * Estado "mostrado" de cada jugador (HP, vivo, monedas). La interfaz dibuja estos valores,
+   * no los reales, para que un golpe se vea cuando el orbe impacta y no antes. Cada cambio
+   * pendiente se aplica (animado) desde processFx en el momento justo.
+   */
+  var shown = { hp: {}, alive: {}, coins: {} };
+  var hpScheduled = {};
+  var fxOrigin = null;
+  var fxChain = Promise.resolve();
+  var fxPending = 0;
+  var overlayDeferred = false;
+  var shownHandIds = {};
 
   function setGame(g) { game = g; }
 
@@ -21,6 +40,8 @@
     ui.fightSelectedIds = {};
     ui.fightUseDaga = false;
     ui.fightMode = false;
+    ui.lastLinked = {};
+    ui.lastComboKey = '';
   }
 
   function el(html) {
@@ -53,14 +74,23 @@
     bar.innerHTML = '';
     var current = S.currentPlayer(game);
     game.players.forEach(function (p) {
-      var pct = Math.max(0, Math.round((p.hp / p.maxHp) * 100));
-      var hpClass = pct > 55 ? 'hp-full' : (pct > 25 ? 'hp-mid' : 'hp-low');
+      if (!(p.id in shown.hp)) {
+        shown.hp[p.id] = p.hp;
+        shown.alive[p.id] = p.alive;
+        shown.coins[p.id] = p.coins;
+      }
+      var hp = shown.hp[p.id];
+      var alive = shown.alive[p.id];
+      var pct = hpPct(hp, p.maxHp);
       var chip = el(
-        '<div class="player-chip' + (p.id === current.id ? ' current' : '') + (p.alive ? '' : ' dead') + '">' +
+        '<div class="player-chip' + (p.id === current.id ? ' current' : '') + (alive ? '' : ' dead') + '" data-player-id="' + p.id + '">' +
           '<div class="pname"><span class="class-icon">' + D.CLASSES[p.classId].icon + '</span>' + escapeHtml(p.name) + (p.isAI ? ' <span class="ai-badge">IA</span>' : '') + '</div>' +
           '<div class="pclass">' + D.CLASSES[p.classId].name + '</div>' +
-          '<div class="hp-bar-outer"><div class="hp-bar-inner" style="width:' + pct + '%;background:var(--' + hpClass + ')"></div></div>' +
-          '<div class="hp-text">' + p.hp + ' / ' + p.maxHp + ' HP</div>' +
+          '<div class="hp-bar-outer">' +
+            '<div class="hp-bar-ghost" style="width:' + pct + '%"></div>' +
+            '<div class="hp-bar-inner" style="width:' + pct + '%;background:var(--' + hpColor(pct) + ')"></div>' +
+          '</div>' +
+          '<div class="hp-text">' + hp + ' / ' + p.maxHp + ' HP</div>' +
           '<div class="coin-text">' + p.coins + ' Monedas</div>' +
           (p.artifacts.length ? '<div class="artifact-icons">' + p.artifacts.map(function (a) { return D.ARTIFACTS[a].name; }).join(', ') + '</div>' : '') +
           '</div>'
@@ -77,6 +107,13 @@
       }
       bar.appendChild(chip);
     });
+  }
+
+  function hpPct(hp, maxHp) { return Math.max(0, Math.min(100, Math.round((hp / maxHp) * 100))); }
+  function hpColor(pct) { return pct > 55 ? 'hp-full' : (pct > 25 ? 'hp-mid' : 'hp-low'); }
+
+  function chipEl(playerId) {
+    return document.querySelector('#players-bar .player-chip[data-player-id="' + playerId + '"]');
   }
 
   function canUseYep(player) {
@@ -163,14 +200,71 @@
     panel.innerHTML = '';
   }
 
+  /* Marca las cartas nuevas desde el ultimo render de la mano de este jugador (robo,
+     inicio de turno, carta robada/recibida) para que entren con animacion de reparto. */
+  function markNewCards(player) {
+    var prev = shownHandIds[player.id] || {};
+    var next = {};
+    var newOnes = {};
+    var order = 0;
+    player.hand.forEach(function (c) {
+      next[c.id] = true;
+      if (!prev[c.id]) { newOnes[c.id] = order; order += 1; }
+    });
+    shownHandIds[player.id] = next;
+    return newOnes;
+  }
+
+  function applyDealIn(node, newOnes, cardId) {
+    if (!(cardId in newOnes)) return;
+    node.classList.add('deal-in');
+    node.style.animationDelay = (newOnes[cardId] * 70) + 'ms';
+  }
+
+  /* Cartas seleccionadas que ya forman parte de una combinacion (misma carta y color
+     repetidos, o una Escalera 1-5 negra completa). Devuelve id -> clave de grupo. */
+  function linkedGroups(selectedCards) {
+    var counts = {};
+    selectedCards.forEach(function (c) {
+      var k = c.color + c.value;
+      counts[k] = (counts[k] || 0) + 1;
+    });
+    var linked = {};
+    selectedCards.forEach(function (c) {
+      var k = c.color + c.value;
+      if (counts[k] >= 2) linked[c.id] = k;
+    });
+    var blacks = selectedCards.filter(function (c) { return c.color === 'negra'; });
+    var values = blacks.map(function (c) { return c.value; }).sort().join('');
+    if (blacks.length === 5 && values === '12345') {
+      blacks.forEach(function (c) { linked[c.id] = 'escalera'; });
+    }
+    return linked;
+  }
+
+  /* Mejor jugada de la seleccion actual (la declarada, o la mas alta entre ataque y curacion). */
+  function bestCombo(selected, isAlquimista) {
+    if (!selected.length) return null;
+    var types = ui.declaredType ? [ui.declaredType] : ['attack', 'heal'];
+    var best = null;
+    types.forEach(function (t) {
+      var r = global.VA_HANDS.evaluateHand(selected, t, isAlquimista);
+      if (r.valid && (!best || r.rank > best.rank)) { best = r; best.type = t; }
+    });
+    return best;
+  }
+
   function renderHandForAction(player, handArea) {
     /* Ordenadas por valor para que las parejas/tercias queden juntas a simple vista,
        y con un contador cuando hay 2 o mas cartas iguales (mismo valor y color) en la
-       mano: eso es justo lo que se necesita para un Duo, Tercia, Poker o Quinta. */
+       mano: eso es justo lo que se necesita para un Duo, Tercia, Poker o Quinta.
+       Dentro de un mismo valor y color, las seleccionadas van primero para que las que
+       forman combinacion queden pegadas y puedan "unirse" visualmente. */
+    var sel = ui.selectedCardIds;
     var sorted = player.hand.slice().sort(function (a, b) {
       if (a.value !== b.value) return a.value - b.value;
       if (a.color !== b.color) return a.color === 'negra' ? -1 : 1;
-      return 0;
+      return (sel[b.id] ? 1 : 0) - (sel[a.id] ? 1 : 0);
     });
     var counts = {};
     sorted.forEach(function (c) {
@@ -178,11 +272,28 @@
       counts[key] = (counts[key] || 0) + 1;
     });
 
+    var selectedCards = sorted.filter(function (c) { return sel[c.id]; });
+    var linked = linkedGroups(selectedCards);
+    var newOnes = markNewCards(player);
+    var prevGroup = null;
+    var linkedNodes = [];
+
     sorted.forEach(function (card) {
       var key = card.color + card.value;
-      var opts = { selectedMap: ui.selectedCardIds };
+      var opts = { selectedMap: sel };
       if (counts[key] >= 2) opts.groupCount = counts[key];
       var node = cardNode(card, opts);
+      applyDealIn(node, newOnes, card.id);
+
+      var group = linked[card.id] || null;
+      if (group) {
+        node.classList.add('linked');
+        linkedNodes.push(node);
+        if (!ui.lastLinked[card.id]) node.classList.add('link-in');
+        if (prevGroup === group) node.classList.add('linked-join');
+      }
+      prevGroup = group;
+
       node.addEventListener('click', function () {
         if (ui.selectedCardIds[card.id]) delete ui.selectedCardIds[card.id];
         else ui.selectedCardIds[card.id] = true;
@@ -190,6 +301,26 @@
       });
       handArea.appendChild(node);
     });
+    ui.lastLinked = linked;
+
+    /* Cuando la seleccion sube a una combinacion nueva (Duo -> Tercia, etc.), su nombre salta. */
+    var combo = bestCombo(selectedCards, player.classId === 'alquimista');
+    var comboKey = combo && combo.rank >= 1 ? combo.levelId + ':' + combo.mainValue : '';
+    if (comboKey && comboKey !== ui.lastComboKey && linkedNodes.length) {
+      var nodesForPop = linkedNodes.slice();
+      var label = combo.levelName.replace(/ \(.*\)$/, '').toUpperCase();
+      global.requestAnimationFrame(function () {
+        var xs = 0;
+        var top = Infinity;
+        nodesForPop.forEach(function (n) {
+          var r = n.getBoundingClientRect();
+          xs += r.left + r.width / 2;
+          top = Math.min(top, r.top);
+        });
+        if (top !== Infinity) FX.comboPop(xs / nodesForPop.length, top - 14, '¡' + label + '!', null, combo.type === 'heal' ? 'heal' : 'attack');
+      });
+    }
+    ui.lastComboKey = comboKey;
   }
 
   function selectedCardIdsArray() { return Object.keys(ui.selectedCardIds); }
@@ -273,8 +404,11 @@
     var cancelBtn = el('<button class="btn">Cancelar</button>');
     confirmBtn.addEventListener('click', function () {
       if (ui.declaredType === 'attack' && !ui.targetId) { ui.error = 'Elige un objetivo.'; renderAll(); return; }
+      var kind = ui.declaredType === 'heal' ? 'heal' : 'attack';
+      var snaps = snapshotCards('#hand-area .card.selected');
       var res = S.playHand(game, player.id, selectedCardIdsArray(), ui.declaredType, ui.targetId, ui.useDaga);
       if (!res.ok) { ui.error = res.error; renderAll(); return; }
+      fxOrigin = FX.mergeCards(snaps, kind);
       resetActionUi();
       renderAll();
     });
@@ -308,9 +442,11 @@
   }
 
   function renderHandForDiscard(player, handArea) {
+    var newOnes = markNewCards(player);
     player.hand.forEach(function (card) {
       var loose = S.isCardLoose(player.hand, card);
       var node = cardNode(card, { looseValue: loose ? card.value : null });
+      applyDealIn(node, newOnes, card.id);
       if (loose) {
         node.addEventListener('click', function () {
           var res = S.discardForCoins(game, player.id, card.id);
@@ -331,11 +467,32 @@
 
   /* ---------------- Overlays ---------------- */
 
+  var lastOverlayKey = '';
+  var overlayEnter = false;
+
+  /* Identifica que ventana se esta mostrando, para animar su entrada solo cuando cambia
+     (y no en cada clic dentro de ella, que tambien re-renderiza). */
+  function overlayKey() {
+    if (game.gameOver) return 'over';
+    if (game.phase === 'pass_device') return 'pass:' + S.currentPlayer(game).id;
+    var p = game.pending;
+    if (!p) return '';
+    if (p.type === 'shop') return 'shop:' + p.index;
+    if (p.type === 'mercado_negro') return 'mercado:' + p.cursor;
+    return p.type + ':' + (p.playerId || '') + ':' + (p.monsterId || '');
+  }
+
   function renderOverlay() {
     var root = document.getElementById('overlay-root');
     root.innerHTML = '';
+    var key = overlayKey();
+    if (game.gameOver && fxPending > 0) key = '';
+    overlayEnter = key !== '' && key !== lastOverlayKey;
+    lastOverlayKey = key;
 
     if (game.gameOver) {
+      /* Deja terminar el golpe final antes de tapar la pantalla con el resultado. */
+      if (fxPending > 0) { overlayDeferred = true; return; }
       root.appendChild(buildGameOverOverlay());
       return;
     }
@@ -352,7 +509,7 @@
   }
 
   function overlayWrap(innerHtml) {
-    return el('<div class="overlay"><div class="modal">' + innerHtml + '</div></div>');
+    return el('<div class="overlay' + (overlayEnter ? ' enter' : '') + '"><div class="modal">' + innerHtml + '</div></div>');
   }
 
   function buildPassDeviceOverlay() {
@@ -388,7 +545,7 @@
     var pend = game.pending;
     var player = S.byId(game, pend.playerId);
     var wrap = overlayWrap(
-      '<h3>' + D.MONSTERS[pend.monsterId].icon + ' Encuentro: ' + escapeHtml(pend.monsterName) + '</h3>' +
+      '<h3><span class="monster-icon">' + D.MONSTERS[pend.monsterId].icon + '</span> Encuentro: ' + escapeHtml(pend.monsterName) + '</h3>' +
       '<p>HP del monstruo: <strong>' + pend.hp + '</strong>' + (pend.cofreBoosted ? ' (+5 por Cofre Mimetico)' : '') + '</p>' +
       '<p class="hint">Referencia de dificultad: ' + pend.minLabel + '. La regla real es: dano total &gt;= HP del monstruo.</p>'
     );
@@ -443,8 +600,10 @@
     var confirmBtn = el('<button class="btn btn-primary">Confirmar ataque</button>');
     var backBtn = el('<button class="btn">Volver</button>');
     confirmBtn.addEventListener('click', function () {
+      var snaps = snapshotCards('#overlay-root .card.selected');
       var res = global.VA_MONSTERS.decide(game, player.id, 'fight', Object.keys(ui.fightSelectedIds), ui.fightUseDaga);
       if (!res.ok) { alert(res.error); return; }
+      fxOrigin = FX.mergeCards(snaps, 'attack');
       ui.fightMode = false;
       renderAll();
     });
@@ -596,12 +755,273 @@
     return wrap;
   }
 
+  /* ---------------- Animaciones ---------------- */
+
+  function snapshotCards(selector) {
+    return Array.prototype.map.call(document.querySelectorAll(selector), function (n) {
+      return { rect: n.getBoundingClientRect(), html: n.outerHTML };
+    });
+  }
+
+  function nextFrame(fn) {
+    global.requestAnimationFrame(function () { global.requestAnimationFrame(fn); });
+  }
+
+  function comboLabel(levelName) {
+    return (levelName || '').replace(/ \(.*\)$/, '').toUpperCase();
+  }
+
+  function chipCenter(playerId) {
+    var c = chipEl(playerId);
+    return c ? FX.centerOf(c) : null;
+  }
+
+  /* Lleva la ficha de un jugador de su HP "mostrado" al real, con la animacion que toque. */
+  function applyHp(playerId) {
+    hpScheduled[playerId] = false;
+    var p = S.byId(game, playerId);
+    if (!p || !(playerId in shown.hp)) return;
+    var before = shown.hp[playerId];
+    var wasAlive = shown.alive[playerId];
+    shown.hp[playerId] = p.hp;
+    shown.alive[playerId] = p.alive;
+    var chip = chipEl(playerId);
+    if (!chip) return;
+
+    var delta = p.hp - before;
+    var pct = hpPct(p.hp, p.maxHp);
+    var inner = chip.querySelector('.hp-bar-inner');
+    var ghost = chip.querySelector('.hp-bar-ghost');
+    var text = chip.querySelector('.hp-text');
+    nextFrame(function () {
+      if (inner) { inner.style.width = pct + '%'; inner.style.background = 'var(--' + hpColor(pct) + ')'; }
+      if (ghost) {
+        if (delta < 0) global.setTimeout(function () { ghost.style.width = pct + '%'; }, 380);
+        else ghost.style.width = pct + '%';
+      }
+    });
+    if (text) text.textContent = p.hp + ' / ' + p.maxHp + ' HP';
+
+    var rect = chip.getBoundingClientRect();
+    var cx = rect.left + rect.width / 2;
+    if (delta < 0) {
+      FX.floatText(cx, rect.top + 16, String(delta), 'dmg');
+      FX.flashRect(rect, 'dmg');
+      FX.shake(chip, delta <= -12);
+    } else if (delta > 0) {
+      FX.floatText(cx, rect.top + 16, '+' + delta, 'heal');
+      FX.flashRect(rect, 'heal');
+      FX.sparkles(cx, rect.top + rect.height / 2);
+    }
+    if (wasAlive && !p.alive) {
+      chip.classList.add('dead', 'fx-dying');
+      FX.floatText(cx, rect.top + rect.height / 2, '💀', 'skull', 150);
+    } else if (!wasAlive && p.alive) {
+      chip.classList.remove('dead');
+    }
+  }
+
+  function applyCoins(p) {
+    var before = shown.coins[p.id];
+    if (before === undefined || before === p.coins) return;
+    shown.coins[p.id] = p.coins;
+    var chip = chipEl(p.id);
+    if (!chip) return;
+    var rect = chip.getBoundingClientRect();
+    var d = p.coins - before;
+    FX.floatText(rect.left + rect.width / 2, rect.bottom - 12, (d > 0 ? '+' : '') + d + ' 🪙', 'coin');
+  }
+
+  /* Jugadores cuyo cambio de HP lo "dispara" el evento en el momento del impacto. */
+  function claimsOf(evt) {
+    if (evt.type === 'attack') return [evt.targetId, evt.attackerId];
+    if (evt.playerId && evt.type !== 'event_card') return [evt.playerId];
+    return [];
+  }
+
+  function resolveOrigin(origin, fallbackPlayerId) {
+    return Promise.resolve(origin).then(function (pt) { return pt || chipCenter(fallbackPlayerId); });
+  }
+
+  function playAttack(evt, origin) {
+    var target = S.byId(game, evt.targetId);
+    var fromMerge = !!origin;
+    return resolveOrigin(origin, evt.attackerId).then(function (from) {
+      if (from) FX.comboPop(from.x, from.y - (fromMerge ? 10 : 40), comboLabel(evt.levelName), evt.amount + ' de dano', 'attack');
+      return FX.projectile(from, chipCenter(evt.targetId), 'attack');
+    }).then(function () {
+      var to = chipCenter(evt.targetId);
+      if (to) FX.burst(to.x, to.y, 'attack', 14);
+      applyHp(evt.targetId);
+      var big = evt.amount >= 12;
+      FX.shake(document.getElementById('board'), big);
+      if (big || (game.isTutorial && target && !target.isAI)) FX.vignette('dmg');
+      if (evt.reflect > 0) {
+        return FX.wait(140).then(function () {
+          return FX.projectile(to, chipCenter(evt.attackerId), 'reflect', 360);
+        }).then(function () {
+          var a = chipCenter(evt.attackerId);
+          if (a) FX.burst(a.x, a.y, 'reflect', 8);
+          applyHp(evt.attackerId);
+        });
+      }
+      applyHp(evt.attackerId);
+      return null;
+    }).then(function () { return FX.wait(250); });
+  }
+
+  function playHeal(evt, origin) {
+    var fromMerge = !!origin;
+    return resolveOrigin(origin, evt.playerId).then(function (from) {
+      var sub = evt.amount > 0 ? '+' + evt.amount + ' HP' : 'Vida al maximo';
+      if (from) FX.comboPop(from.x, from.y - (fromMerge ? 10 : 40), comboLabel(evt.levelName), sub, 'heal');
+      return FX.projectile(from, chipCenter(evt.playerId), 'heal');
+    }).then(function () {
+      applyHp(evt.playerId);
+      return FX.wait(250);
+    });
+  }
+
+  function playMonsterFight(evt, origin) {
+    var m = D.MONSTERS[evt.monsterId];
+    var stage = FX.monsterStage(m.icon, m.name, evt.hp);
+    return FX.wait(300).then(function () {
+      if (!evt.amount && !origin) return null;
+      return resolveOrigin(origin, evt.playerId).then(function (from) {
+        var sc = stage.center();
+        if (evt.levelName) FX.comboPop(sc.x, sc.y - 70, comboLabel(evt.levelName), evt.amount + ' de dano', 'attack');
+        return FX.projectile(from, sc, 'attack', 480);
+      }).then(function () {
+        var c = stage.center();
+        stage.hit();
+        FX.burst(c.x, c.y, 'attack', 12);
+      });
+    }).then(function () {
+      return FX.wait(250);
+    }).then(function () {
+      if (evt.win) {
+        stage.defeat();
+        FX.banner('✨ <strong>' + escapeHtml(m.name) + '</strong> derrotado: ¡la Tienda se abre para todos!', 'gold');
+      } else {
+        stage.resist(evt.amount || undefined);
+      }
+      return FX.wait(700);
+    }).then(function () {
+      applyHp(evt.playerId);
+      return FX.wait(450);
+    }).then(function () { stage.remove(); });
+  }
+
+  function playMonsterFlee(evt) {
+    var m = D.MONSTERS[evt.monsterId];
+    var stage = FX.monsterStage(m.icon, m.name);
+    return FX.wait(300).then(function () {
+      stage.flee();
+      return FX.wait(450);
+    }).then(function () {
+      applyHp(evt.playerId);
+      return FX.wait(500);
+    }).then(function () { stage.remove(); });
+  }
+
+  /* Version instantanea: si las jugadas llegan mas rapido de lo que duran las animaciones,
+     se aplican los resultados sin orbes ni esperas para que la pantalla no se quede atras. */
+  function playEventFast(evt) {
+    claimsOf(evt).forEach(function (pid) { if (hpScheduled[pid]) applyHp(pid); });
+    if (evt.type === 'death') {
+      var dead = S.byId(game, evt.playerId);
+      FX.banner('💀 <strong>' + escapeHtml(dead.name) + '</strong> ha sido eliminado', 'dmg');
+    } else if (evt.type === 'event_card') {
+      showEventBanner(evt);
+    }
+    return Promise.resolve();
+  }
+
+  function showEventBanner(evt) {
+    var e = D.EVENTS[evt.eventId];
+    FX.banner(
+      '<span class="fx-banner-icon">' + e.icon + '</span>' +
+      '<span><strong>Suceso: ' + escapeHtml(e.name) + '</strong><small>' + escapeHtml(e.desc) + '</small></span>',
+      'event', 3800
+    );
+  }
+
+  function playEvent(evt, origin) {
+    if (fxPending > 2) return playEventFast(evt);
+    var p = evt.playerId ? S.byId(game, evt.playerId) : null;
+    switch (evt.type) {
+      case 'attack': return playAttack(evt, origin);
+      case 'heal': return playHeal(evt, origin);
+      case 'monster_fight': return playMonsterFight(evt, origin);
+      case 'monster_flee': return playMonsterFlee(evt);
+      case 'death':
+        if (hpScheduled[evt.playerId]) applyHp(evt.playerId);
+        FX.banner('💀 <strong>' + escapeHtml(p.name) + '</strong> ha sido eliminado', 'dmg');
+        return FX.wait(500);
+      case 'revive': {
+        var c = chipCenter(evt.playerId);
+        if (c) FX.burst(c.x, c.y, 'fire', 16);
+        FX.banner('🔥 Capa del Fenix: <strong>' + escapeHtml(p.name) + '</strong> revive con 12 HP', 'gold');
+        return FX.wait(400);
+      }
+      case 'event_card':
+        showEventBanner(evt);
+        return FX.wait(200);
+      default:
+        return Promise.resolve();
+    }
+  }
+
+  function fxDone() {
+    fxPending = Math.max(0, fxPending - 1);
+    if (fxPending === 0 && overlayDeferred) {
+      overlayDeferred = false;
+      renderAll();
+    }
+  }
+
+  /* Consume la cola de eventos visuales del motor y los reproduce en orden. Cualquier error
+     de animacion se traga: un efecto nunca debe romper la partida. */
+  function processFx() {
+    var queue = game.fxQueue || [];
+    game.fxQueue = [];
+    var origin = fxOrigin;
+    fxOrigin = null;
+
+    queue.forEach(function (evt) {
+      claimsOf(evt).forEach(function (pid) { hpScheduled[pid] = true; });
+    });
+
+    game.players.forEach(function (p) {
+      if (!(p.id in shown.hp)) return;
+      if (!hpScheduled[p.id] && (shown.hp[p.id] !== p.hp || shown.alive[p.id] !== p.alive)) applyHp(p.id);
+      applyCoins(p);
+    });
+
+    queue.forEach(function (evt) {
+      var evtOrigin = null;
+      if (origin && (evt.type === 'attack' || evt.type === 'heal' || evt.type === 'monster_fight')) {
+        evtOrigin = origin;
+        origin = null;
+      }
+      fxPending += 1;
+      fxChain = fxChain
+        .then(function () { return playEvent(evt, evtOrigin); })
+        .catch(function () { return null; })
+        .then(function () {
+          claimsOf(evt).forEach(function (pid) { if (hpScheduled[pid]) applyHp(pid); });
+          fxDone();
+        });
+    });
+  }
+
   /* ---------------- Entrada principal ---------------- */
 
   function renderAll() {
     renderPlayersBar();
     renderLog();
     renderActionPanel();
+    processFx();
     renderOverlay();
     if (game.isTutorial) global.VA_AI.tick(game, renderAll);
   }

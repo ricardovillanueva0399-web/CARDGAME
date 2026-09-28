@@ -32,9 +32,27 @@ js/state.js           Motor de turnos y estado de partida
 js/tutorial.js         Panel de referencia estático "Cómo jugar" (10 pasos)
 js/coach.js            Textos de pista contextuales del Modo Tutorial
 js/ai.js               IA que juega turnos completos en el Modo Tutorial
+js/fx.js               Efectos visuales (orbes, números flotantes, estallidos, carteles)
 js/ui.js              Renderizado e interacción con el DOM
 js/main.js            Pantalla de configuración y arranque
 ```
+
+## Animaciones
+
+- Al elegir cartas que forman una combinación, esas cartas se juntan (se superponen
+  con brillo dorado) y el nombre de la jugada salta encima ("¡DUO!", "¡TERCIA!"...).
+- Al confirmar, las cartas se fusionan en un orbe que viaja hasta el objetivo; recién
+  al impactar se ve el daño o la curación (número flotante, destello, sacudida y la
+  barra de vida que baja dejando un tramo "fantasma" de lo perdido).
+- Reflejo (Espejo / Espejo Roto), monedas ganadas o gastadas, eliminaciones, Capa del
+  Fénix, Sucesos y combates contra monstruos (el monstruo aparece en el centro de la
+  pantalla) tienen su propio efecto; las cartas nuevas entran repartiéndose.
+- Cómo encaja con el resto: el motor solo agrega eventos a `game.fxQueue`
+  (sin afectar las reglas) y la interfaz los reproduce en orden sobre una capa aparte,
+  mostrando el HP "anterior" hasta el momento del impacto. Si las jugadas llegan más
+  rápido que las animaciones, las pendientes se aplican al instante para no atrasarse.
+- Con "reducir movimiento" activado en el sistema operativo, los avisos se mantienen
+  pero sin desplazamientos ni sacudidas.
 
 ## Modo Tutorial (jugar contra la IA)
 
