@@ -42,6 +42,7 @@
         '<div class="suit">' + suit + '</div>' +
         '<div class="corner corner-br"><span>' + card.value + '</span><span>' + suit + '</span></div>' +
         (opts.looseValue ? '<div class="loose-tag">+' + opts.looseValue + '</div>' : '') +
+        (opts.groupCount ? '<div class="group-badge" title="Tienes ' + opts.groupCount + ' cartas de valor ' + card.value + '">×' + opts.groupCount + '</div>' : '') +
       '</div>'
     );
     return node;
@@ -163,8 +164,25 @@
   }
 
   function renderHandForAction(player, handArea) {
-    player.hand.forEach(function (card) {
-      var node = cardNode(card, { selectedMap: ui.selectedCardIds });
+    /* Ordenadas por valor para que las parejas/tercias queden juntas a simple vista,
+       y con un contador cuando hay 2 o mas cartas iguales (mismo valor y color) en la
+       mano: eso es justo lo que se necesita para un Duo, Tercia, Poker o Quinta. */
+    var sorted = player.hand.slice().sort(function (a, b) {
+      if (a.value !== b.value) return a.value - b.value;
+      if (a.color !== b.color) return a.color === 'negra' ? -1 : 1;
+      return 0;
+    });
+    var counts = {};
+    sorted.forEach(function (c) {
+      var key = c.color + c.value;
+      counts[key] = (counts[key] || 0) + 1;
+    });
+
+    sorted.forEach(function (card) {
+      var key = card.color + card.value;
+      var opts = { selectedMap: ui.selectedCardIds };
+      if (counts[key] >= 2) opts.groupCount = counts[key];
+      var node = cardNode(card, opts);
       node.addEventListener('click', function () {
         if (ui.selectedCardIds[card.id]) delete ui.selectedCardIds[card.id];
         else ui.selectedCardIds[card.id] = true;
@@ -176,10 +194,36 @@
 
   function selectedCardIdsArray() { return Object.keys(ui.selectedCardIds); }
 
+  /* Vista previa en vivo: en cuanto hay cartas seleccionadas, muestra que mano
+     formarian tanto en Ataque como en Curacion, sin esperar a declarar. Es la
+     respuesta directa a "no se que mano estoy formando". */
+  function buildHandPreview(selected, isAlquimista) {
+    var box = el('<div class="hand-preview"></div>');
+    ['attack', 'heal'].forEach(function (type) {
+      var result = global.VA_HANDS.evaluateHand(selected, type, isAlquimista);
+      var label = type === 'attack' ? 'Como Ataque' : 'Como Curacion';
+      var text;
+      if (result.valid) {
+        text = result.levelName + (result.mainValue !== null ? ' (carta principal ' + result.mainValue + ')' : '') +
+          ' → ' + result.baseValue + (type === 'attack' ? ' de dano' : ' de curacion') + '.';
+      } else {
+        text = result.reason;
+      }
+      var active = ui.declaredType === type;
+      var row = el(
+        '<div class="preview-row' + (active ? ' active' : '') + (result.valid ? '' : ' invalid') + '">' +
+          '<strong>' + label + ':</strong> ' + escapeHtml(text) +
+        '</div>'
+      );
+      box.appendChild(row);
+    });
+    return box;
+  }
+
   function renderActionControls(player, controls) {
     var group1 = el('<div class="group"></div>');
-    var atkBtn = el('<button class="btn">Declarar Ataque</button>');
-    var healBtn = el('<button class="btn">Declarar Curacion</button>');
+    var atkBtn = el('<button class="btn' + (ui.declaredType === 'attack' ? ' btn-primary' : '') + '">Declarar Ataque</button>');
+    var healBtn = el('<button class="btn' + (ui.declaredType === 'heal' ? ' btn-primary' : '') + '">Declarar Curacion</button>');
     var passBtn = el('<button class="btn">Pasar sin jugar</button>');
     atkBtn.addEventListener('click', function () { ui.declaredType = 'attack'; ui.error = ''; renderAll(); });
     healBtn.addEventListener('click', function () { ui.declaredType = 'heal'; ui.error = ''; renderAll(); });
@@ -193,21 +237,18 @@
     group1.appendChild(passBtn);
     controls.appendChild(group1);
 
-    if (!ui.declaredType) return;
-
     var selected = selectedCardIdsArray().map(function (id) {
       return player.hand.filter(function (c) { return c.id === id; })[0];
     }).filter(Boolean);
     var isAlquimista = player.classId === 'alquimista';
-    var preview = selected.length ? global.VA_HANDS.evaluateHand(selected, ui.declaredType, isAlquimista) : null;
 
-    var info = el('<div class="info"></div>');
-    if (preview && preview.valid) {
-      info.textContent = preview.levelName + (preview.mainValue !== null ? ' (carta principal ' + preview.mainValue + ')' : '') + ' -> valor base ' + preview.baseValue + '.';
+    if (selected.length > 0) {
+      controls.appendChild(buildHandPreview(selected, isAlquimista));
     } else {
-      info.textContent = 'Selecciona cartas de mano para formar una jugada de ' + (ui.declaredType === 'attack' ? 'Ataque' : 'Curacion') + '.';
+      controls.appendChild(el('<div class="info">Toca una o mas cartas de tu mano para ver aqui que jugada formarian.</div>'));
     }
-    controls.appendChild(info);
+
+    if (!ui.declaredType) return;
 
     if (ui.declaredType === 'attack') {
       var targetGroup = el('<div class="group"></div>');

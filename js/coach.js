@@ -6,11 +6,11 @@
 
   function actionHint(hasHandCards, ui) {
     if (!hasHandCards) return 'No tienes cartas en mano. Pulsa "Pasar sin jugar" para seguir.';
-    if (!ui.declaredType) {
-      return 'Elige algunas cartas de tu mano (busca dos o mas del mismo valor: forman un Duo, Tercia, etc.) y pulsa "Declarar Ataque" o "Declarar Curacion" segun el color que hayas elegido.';
-    }
     if (ui.selectedCount === 0) {
-      return 'Selecciona al menos una carta ' + (ui.declaredType === 'attack' ? 'negra' : 'roja') + ' de tu mano para formar la jugada.';
+      return 'Toca una o mas cartas (el numero morado sobre una carta te dice cuantas tienes de ese mismo valor). En cuanto elijas alguna, aqui abajo aparecera en vivo que jugada formarian como Ataque y como Curacion.';
+    }
+    if (!ui.declaredType) {
+      return 'Mira el recuadro de arriba: te muestra que mano formarian tus cartas elegidas en Ataque y en Curacion. Pulsa el boton que corresponda a la que te convenga.';
     }
     if (ui.declaredType === 'attack' && !ui.hasTarget) {
       return 'Ahora elige a que rival vas a atacar.';

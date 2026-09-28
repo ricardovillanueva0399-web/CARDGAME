@@ -193,10 +193,32 @@ select:focus, input[type=text]:focus { outline: none; border-color: var(--accent
   font-size: 0.62rem; border-radius: 4px; padding: 1px 5px; font-weight: 700;
 }
 .card.disabled { opacity: 0.45; cursor: not-allowed; }
+.card .group-badge {
+  position: absolute; top: -8px; left: 50%; transform: translateX(-50%);
+  background: var(--accent-2); color: #fff; font-size: 0.6rem; font-weight: 700;
+  border-radius: 999px; padding: 1px 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
 
 #controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 #controls .group { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 #controls .info { font-size: 0.78rem; color: var(--muted); flex-basis: 100%; }
+
+.hand-preview {
+  flex-basis: 100%; display: flex; flex-direction: column; gap: 6px;
+  margin: 2px 0 4px;
+}
+.preview-row {
+  font-size: 0.82rem; padding: 7px 10px; border-radius: 7px;
+  background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
+}
+.preview-row strong { color: var(--muted); font-weight: 600; }
+.preview-row.invalid { color: var(--muted); }
+.preview-row.invalid strong { color: var(--muted); }
+.preview-row.active {
+  border-color: var(--accent); background: rgba(200,150,62,0.14);
+  box-shadow: 0 0 0 1px rgba(200,150,62,0.3);
+}
+.preview-row.active strong { color: var(--accent); }
 
 #loot-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; border-top: 1px dashed var(--border); padding-top: 8px; }
 #loot-bar .btn { font-size: 0.72rem; }
