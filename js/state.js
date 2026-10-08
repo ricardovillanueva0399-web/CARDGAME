@@ -7,15 +7,15 @@
   var HANDS = global.VA_HANDS;
   var COMBAT = global.VA_COMBAT;
 
-  function makePlayer(id, name, classId, isAI) {
-    var cls = D.CLASSES[classId];
+  function makePlayer(id, name, classId, isAI, durationId) {
+    var maxHp = D.classMaxHp(classId, durationId);
     return {
       id: id,
       name: name,
       classId: classId,
       isAI: !!isAI,
-      maxHp: cls.maxHp,
-      hp: cls.maxHp,
+      maxHp: maxHp,
+      hp: maxHp,
       coins: 0,
       artifacts: [],
       lootBag: [],
@@ -29,10 +29,13 @@
     };
   }
 
-  function createGame(playerDefs) {
+  /* opts.duration: id de D.DURATIONS (por defecto D.DEFAULT_DURATION). */
+  function createGame(playerDefs, opts) {
+    var duration = D.durationOf(opts && opts.duration);
     var game = {
+      durationId: duration.id,
       players: playerDefs.map(function (def, idx) {
-        return makePlayer('p' + idx, def.name, def.classId, def.isAI);
+        return makePlayer('p' + idx, def.name, def.classId, def.isAI, duration.id);
       }),
       order: playerDefs.map(function (def, idx) { return 'p' + idx; }),
       turnIndex: 0,
@@ -48,6 +51,7 @@
       isTutorial: false,
       fxQueue: []
     };
+    logMsg(game, 'Duracion ' + duration.name + ': ' + duration.desc);
     return game;
   }
 

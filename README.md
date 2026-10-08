@@ -100,6 +100,29 @@ de este modo) sigue disponible aparte, tanto en la pantalla de preparación como
 durante cualquier partida, como una chuleta de reglas independiente del estado de
 juego.
 
+## Duración de la partida
+
+En la preparación hay un selector **Duración** (también aplica al Modo Tutorial):
+
+| Duración | HP de las clases | Penalización de monstruo | Turnos por jugador, 1 vs 1 (mediana) | 4 jugadores |
+|---|---|---|---|---|
+| Rápida (reglas originales v3.3) | x1 (25 / 40) | completa (5 / 15 / 28) | 2,5 | 3,8 |
+| **Normal** (por defecto) | x1.5 (38 / 60) | a la mitad (3 / 8 / 14) | 6,5 | 7,0 |
+| Larga | x2 (50 / 80) | a la mitad (3 / 8 / 14) | 8,0 | 8,3 |
+
+Por qué: simulando partidas IA contra IA con las reglas originales, una partida 1 vs 1
+duraba una mediana de 2,5 turnos por jugador, un tercio terminaba antes de que cada uno
+jugara 2 turnos, y casi dos tercios del HP perdido venía de penalizaciones de monstruo
+(huir o perder contra Sombra del Vacío o AZAZEL quita 15 o 28 de 25–40 HP, y con manos
+normales casi nunca se les gana). Los turnos de la tabla salen de esas simulaciones
+(1000 partidas de 2 jugadores y 400 de 4 por duración): son una estimación, no una
+garantía. La IA juega de forma sencilla (solo grupos del mismo valor), así que con
+personas que arman Doble Duo o Full House las partidas probablemente sean algo más cortas.
+
+No se escalan el HP de la Capa del Fénix (12), el premio de AZAZEL (+15 HP máximo), los
+costes de la Daga (4 HP) y la Transfusión (6 HP) ni la pérdida del Sanguinario
+(1 HP por turno): en Normal y Larga pesan relativamente menos.
+
 ## Decisiones de diseño donde el documento original era ambiguo o incompleto
 
 El documento describe el sistema de reglas con detalle, pero deja varios puntos sin

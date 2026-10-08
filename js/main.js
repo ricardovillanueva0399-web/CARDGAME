@@ -3,6 +3,12 @@
   'use strict';
 
   var D = global.VA_DATA;
+  var currentGame = null;
+
+  function selectedDuration() {
+    var sel = document.getElementById('duration-select');
+    return sel && sel.value ? sel.value : D.DEFAULT_DURATION;
+  }
 
   function buildClassSelect() {
     var opts = Object.keys(D.CLASSES).map(function (id) {
@@ -29,11 +35,12 @@
       var updateDesc = function (sel, d, pic) {
         return function () {
           var cls = D.CLASSES[sel.value];
-          d.textContent = cls.icon + ' ' + cls.summary + ' (' + cls.maxHp + ' HP) - ' + cls.drawback;
+          d.textContent = cls.icon + ' ' + cls.summary + ' (' + D.classMaxHp(sel.value, selectedDuration()) + ' HP) - ' + cls.drawback;
           pic.innerHTML = global.VA_PIXEL.sprite(cls.icon, 'md');
         };
       }(select, desc, portrait);
       select.addEventListener('change', updateDesc);
+      row.updateDesc = updateDesc;
       updateDesc();
       wrap.appendChild(row);
     }
@@ -69,7 +76,21 @@
     countSelect.addEventListener('change', function () {
       renderPlayerForms(parseInt(countSelect.value, 10));
     });
+    var durationSelect = document.getElementById('duration-select');
+    durationSelect.innerHTML = Object.keys(D.DURATIONS).map(function (id) {
+      return '<option value="' + id + '">' + D.DURATIONS[id].name + '</option>';
+    }).join('');
+    durationSelect.value = D.DEFAULT_DURATION;
+    var updateDuration = function () {
+      document.getElementById('duration-desc').textContent = D.durationOf(durationSelect.value).desc;
+      Array.prototype.forEach.call(document.querySelectorAll('.player-form-row'), function (row) {
+        if (row.updateDesc) row.updateDesc();
+      });
+    };
+    durationSelect.addEventListener('change', updateDuration);
+
     renderPlayerForms(2);
+    updateDuration();
 
     document.getElementById('start-game-btn').addEventListener('click', function () {
       var rows = document.querySelectorAll('.player-form-row');
@@ -82,18 +103,19 @@
     });
 
     document.getElementById('how-to-play-btn').addEventListener('click', function () {
-      global.VA_TUTORIAL.open();
+      global.VA_TUTORIAL.open(selectedDuration());
     });
     document.getElementById('how-to-play-btn-game').addEventListener('click', function () {
-      global.VA_TUTORIAL.open();
+      global.VA_TUTORIAL.open(currentGame ? currentGame.durationId : selectedDuration());
     });
     document.getElementById('start-tutorial-btn').addEventListener('click', startTutorial);
   }
 
   function startGame(defs, opts) {
     opts = opts || {};
-    var game = global.VA_STATE.createGame(defs);
+    var game = global.VA_STATE.createGame(defs, { duration: selectedDuration() });
     game.isTutorial = !!opts.tutorial;
+    currentGame = game;
     global.VA_UI.setGame(game);
     crtSwitch();
     document.getElementById('setup-screen').hidden = true;

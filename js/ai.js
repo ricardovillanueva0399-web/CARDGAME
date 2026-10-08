@@ -96,6 +96,10 @@
        su pasiva permitiria, pero de forma correcta). */
     var pool = actor.hand.filter(function (c) { return c.color === 'negra'; });
     var group = bestGroup(pool);
+    /* Combate obligatorio sin ninguna carta negra: solo puede pasarle al Alquimista (al resto
+       el motor ya le da la derrota automatica). Con un grupo vacio el motor rechaza el combate
+       y la IA lo reintentaria sin fin, congelando la partida; usa sus rojas al 70%. */
+    if (group.length === 0 && !pend.canFlee) group = bestGroup(actor.hand);
     var estimate = estimateAttackValue(game, actor, group);
 
     var shouldFight = group.length > 0 && (!pend.canFlee || estimate >= pend.hp);

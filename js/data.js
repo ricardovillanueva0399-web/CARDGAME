@@ -10,7 +10,7 @@
       icon: '⚔️',
       maxHp: 25,
       summary: '+3 de dano en todos sus ataques.',
-      drawback: 'HP base baja (25).'
+      drawback: 'HP base mas baja que el resto.'
     },
     espejo: {
       id: 'espejo',
@@ -162,6 +162,32 @@
   var MAX_ARTIFACTS = 3;
   var HAND_SIZE = 5;
 
+  /*
+   * Duracion de la partida. No esta en el documento de diseno (ver README): con las reglas
+   * originales casi todo el HP se pierde por penalizaciones de monstruo y las partidas duran
+   * muy poco. 'rapida' conserva las reglas v3.3 tal cual; las otras multiplican el HP maximo
+   * de las clases y reducen a la mitad la penalizacion por huir o perder contra un monstruo.
+   */
+  var DURATIONS = {
+    rapida: {
+      id: 'rapida', name: 'Rapida (reglas originales v3.3)', hpMult: 1, penaltyMult: 1,
+      desc: 'HP y penalizaciones de monstruo originales: un par de malos encuentros te eliminan.'
+    },
+    normal: {
+      id: 'normal', name: 'Normal', hpMult: 1.5, penaltyMult: 0.5,
+      desc: 'HP x1.5 y penalizaciones de monstruo a la mitad.'
+    },
+    larga: {
+      id: 'larga', name: 'Larga', hpMult: 2, penaltyMult: 0.5,
+      desc: 'HP x2 y penalizaciones de monstruo a la mitad.'
+    }
+  };
+  var DEFAULT_DURATION = 'normal';
+
+  function durationOf(id) { return DURATIONS[id] || DURATIONS[DEFAULT_DURATION]; }
+  function classMaxHp(classId, durationId) { return Math.round(CLASSES[classId].maxHp * durationOf(durationId).hpMult); }
+  function monsterPenalty(monsterId, durationId) { return Math.round(MONSTERS[monsterId].fleeHpLoss * durationOf(durationId).penaltyMult); }
+
   global.VA_DATA = {
     CLASSES: CLASSES,
     HAND_LEVELS: HAND_LEVELS,
@@ -170,6 +196,11 @@
     LOOT: LOOT,
     ARTIFACTS: ARTIFACTS,
     MAX_ARTIFACTS: MAX_ARTIFACTS,
-    HAND_SIZE: HAND_SIZE
+    HAND_SIZE: HAND_SIZE,
+    DURATIONS: DURATIONS,
+    DEFAULT_DURATION: DEFAULT_DURATION,
+    durationOf: durationOf,
+    classMaxHp: classMaxHp,
+    monsterPenalty: monsterPenalty
   };
 })(window);

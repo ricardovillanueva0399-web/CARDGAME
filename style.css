@@ -255,6 +255,7 @@ img.px-sprite.px-lg { width: 112px; height: 112px; }
 
 .field-row { display: flex; align-items: center; gap: 12px; margin: 12px 0; flex-wrap: wrap; }
 .field-row label { color: var(--muted); min-width: 90px; }
+.field-note { color: var(--muted); font-size: 19px; flex: 1 1 220px; }
 
 select, input[type=text] {
   --u: 2px;

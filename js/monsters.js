@@ -83,8 +83,9 @@
   function applyLosePenalty(game, player, monsterId) {
     var s = state();
     var base = D.MONSTERS[monsterId];
-    player.hp = Math.max(0, player.hp - base.fleeHpLoss);
-    s.logMsg(game, player.name + ' sufre la penalizacion de ' + base.name + ': -' + base.fleeHpLoss + ' HP.');
+    var loss = D.monsterPenalty(monsterId, game.durationId);
+    player.hp = Math.max(0, player.hp - loss);
+    s.logMsg(game, player.name + ' sufre la penalizacion de ' + base.name + ': -' + loss + ' HP.');
     if (base.fleeStealsCard) {
       var rivals = s.otherAlivePlayers(game, player.id);
       if (rivals.length > 0 && player.hand.length > 0) {

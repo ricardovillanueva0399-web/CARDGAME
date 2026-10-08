@@ -73,20 +73,22 @@
     },
     {
       title: 'Monstruos de Emboscada',
-      body:
+      body: function (dur) { return '' +
         '<div class="tut-table-wrap"><table class="tut-table">' +
         '<tr><th>Monstruo</th><th>HP</th><th>Penalizacion</th></tr>' +
-        '<tr><td>' + D.MONSTERS.ladron.icon + ' Ladron de Sombras</td><td>12</td><td>-5 HP y te roban 1 carta</td></tr>' +
-        '<tr><td>' + D.MONSTERS.sombra.icon + ' Sombra del Vacio</td><td>30</td><td>-15 HP</td></tr>' +
-        '<tr><td>' + D.MONSTERS.azazel.icon + ' AZAZEL (Jefe)</td><td>45</td><td>-28 HP</td></tr>' +
+        '<tr><td>' + D.MONSTERS.ladron.icon + ' Ladron de Sombras</td><td>12</td><td>-' + D.monsterPenalty('ladron', dur) + ' HP y te roban 1 carta</td></tr>' +
+        '<tr><td>' + D.MONSTERS.sombra.icon + ' Sombra del Vacio</td><td>30</td><td>-' + D.monsterPenalty('sombra', dur) + ' HP</td></tr>' +
+        '<tr><td>' + D.MONSTERS.azazel.icon + ' AZAZEL (Jefe)</td><td>45</td><td>-' + D.monsterPenalty('azazel', dur) + ' HP</td></tr>' +
         '</table></div>' +
+        durationNote(dur) +
         '<p>Al robar un Monstruo eliges: <strong>Combatir</strong> (formas un ataque con tu ' +
         'mano actual) o <strong>Huir</strong> (penalizacion fija, el monstruo vuelve al ' +
         'mazo).</p>' +
         '<p>Si tu dano es mayor o igual al HP del monstruo, muere y ganas una recompensa. Si ' +
         'no llega, sufres la misma penalizacion que huir.</p>' +
         '<p><strong>Derrotar cualquier monstruo abre la Tienda para todos los jugadores</strong>, ' +
-        'no solo para quien lo vencio.</p>'
+        'no solo para quien lo vencio.</p>';
+      }
     },
     {
       title: 'Sucesos',
@@ -118,16 +120,18 @@
     },
     {
       title: 'Las 6 clases',
-      body:
+      body: function (dur) { return '' +
         '<div class="tut-table-wrap"><table class="tut-table tut-table-classes">' +
         '<tr><th>Clase</th><th>HP</th><th>Pasiva</th><th>Desventaja</th></tr>' +
-        '<tr><td>' + D.CLASSES.gladiador.icon + ' Gladiador</td><td>25</td><td>+3 dano en ataques</td><td>HP base baja</td></tr>' +
-        '<tr><td>' + D.CLASSES.espejo.icon + ' Espejo</td><td>40</td><td>Refleja 25% del dano (max 8)</td><td>Sin artefactos Escudo</td></tr>' +
-        '<tr><td>' + D.CLASSES.cleptomano.icon + ' Cleptomano</td><td>40</td><td>Roba 1 carta rival al iniciar turno</td><td>Monstruos +4 HP contra el</td></tr>' +
-        '<tr><td>' + D.CLASSES.taumaturgo.icon + ' Taumaturgo</td><td>40</td><td>Curaciones x1.5</td><td>-4 dano en ataques</td></tr>' +
-        '<tr><td>' + D.CLASSES.alquimista.icon + ' Alquimista</td><td>40</td><td>Usa cualquier color al 70%</td><td>Penalizacion fija del 30%</td></tr>' +
-        '<tr><td>' + D.CLASSES.sanguinario.icon + ' Sanguinario</td><td>40</td><td>Recupera HP al hacer dano</td><td>-1 HP cada turno</td></tr>' +
-        '</table></div>'
+        '<tr><td>' + D.CLASSES.gladiador.icon + ' Gladiador</td><td>' + D.classMaxHp('gladiador', dur) + '</td><td>+3 dano en ataques</td><td>HP base baja</td></tr>' +
+        '<tr><td>' + D.CLASSES.espejo.icon + ' Espejo</td><td>' + D.classMaxHp('espejo', dur) + '</td><td>Refleja 25% del dano (max 8)</td><td>Sin artefactos Escudo</td></tr>' +
+        '<tr><td>' + D.CLASSES.cleptomano.icon + ' Cleptomano</td><td>' + D.classMaxHp('cleptomano', dur) + '</td><td>Roba 1 carta rival al iniciar turno</td><td>Monstruos +4 HP contra el</td></tr>' +
+        '<tr><td>' + D.CLASSES.taumaturgo.icon + ' Taumaturgo</td><td>' + D.classMaxHp('taumaturgo', dur) + '</td><td>Curaciones x1.5</td><td>-4 dano en ataques</td></tr>' +
+        '<tr><td>' + D.CLASSES.alquimista.icon + ' Alquimista</td><td>' + D.classMaxHp('alquimista', dur) + '</td><td>Usa cualquier color al 70%</td><td>Penalizacion fija del 30%</td></tr>' +
+        '<tr><td>' + D.CLASSES.sanguinario.icon + ' Sanguinario</td><td>' + D.classMaxHp('sanguinario', dur) + '</td><td>Recupera HP al hacer dano</td><td>-1 HP cada turno</td></tr>' +
+        '</table></div>' +
+        durationNote(dur);
+      }
     },
     {
       title: 'Listo para jugar',
@@ -146,6 +150,18 @@
   ];
 
   var currentStep = 0;
+  var currentDuration = D.DEFAULT_DURATION;
+
+  /* Aclara de que duracion son los valores mostrados cuando no son los del documento original. */
+  function durationNote(dur) {
+    var d = D.durationOf(dur);
+    if (d.hpMult === 1 && d.penaltyMult === 1) return '';
+    return '<p class="tut-note">Valores para la duracion ' + d.name + ': ' + d.desc + '</p>';
+  }
+
+  function stepBody(step) {
+    return typeof step.body === 'function' ? step.body(currentDuration) : step.body;
+  }
 
   function el(html) {
     var t = document.createElement('template');
@@ -169,7 +185,7 @@
             '<button class="btn btn-small tut-close" aria-label="Cerrar">Cerrar</button>' +
           '</div>' +
           '<h3>' + STEPS[currentStep].title + '</h3>' +
-          '<div class="tut-body">' + STEPS[currentStep].body + '</div>' +
+          '<div class="tut-body">' + stepBody(STEPS[currentStep]) + '</div>' +
           '<div class="tut-dots">' + dots + '</div>' +
           '<div class="tut-nav">' +
             '<button class="btn tut-prev"' + (currentStep === 0 ? ' disabled' : '') + '>&larr; Anterior</button>' +
@@ -203,7 +219,8 @@
     render();
   }
 
-  function open() {
+  function open(durationId) {
+    currentDuration = D.durationOf(durationId).id;
     currentStep = 0;
     render();
   }
