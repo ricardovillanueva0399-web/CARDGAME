@@ -100,28 +100,50 @@ de este modo) sigue disponible aparte, tanto en la pantalla de preparación como
 durante cualquier partida, como una chuleta de reglas independiente del estado de
 juego.
 
-## Duración de la partida
+## Duración de la partida y monstruos
 
-En la preparación hay un selector **Duración** (también aplica al Modo Tutorial):
+En la preparación hay un selector **Duración** (también aplica al Modo Tutorial). "Rápida"
+son las reglas originales v3.3 sin tocar; "Normal" (por defecto) y "Larga" cambian el HP y
+cómo funcionan los monstruos:
 
-| Duración | HP de las clases | Penalización de monstruo | Turnos por jugador, 1 vs 1 (mediana) | 4 jugadores |
-|---|---|---|---|---|
-| Rápida (reglas originales v3.3) | x1 (25 / 40) | completa (5 / 15 / 28) | 2,5 | 3,8 |
-| **Normal** (por defecto) | x1.5 (38 / 60) | a la mitad (3 / 8 / 14) | 6,5 | 7,0 |
-| Larga | x2 (50 / 80) | a la mitad (3 / 8 / 14) | 8,0 | 8,3 |
+| | Rápida (original) | **Normal** | Larga |
+|---|---|---|---|
+| HP de las clases | 25 / 40 | 38 / 60 | 50 / 80 |
+| HP de Ladrón / Sombra / AZAZEL | 12 / 30 / 45 | 6 / 15 / 23 | 6 / 15 / 23 |
+| Huir o perder contra ellos | -5 / -15 / -28 HP | -3 / -8 / -14 HP | -3 / -8 / -14 HP |
+| El monstruo te espera a que completes la mano | no | sí | sí |
+| El daño que le haces se queda (vuelve herido al mazo) | no | sí | sí |
+| Turnos por jugador, 1 vs 1 (mediana) | 2,5 | 7,0 | 8,5 |
+| Turnos por jugador, 4 jugadores (mediana) | 3,8 | 7,5 | 10,3 |
 
-Por qué: simulando partidas IA contra IA con las reglas originales, una partida 1 vs 1
-duraba una mediana de 2,5 turnos por jugador, un tercio terminaba antes de que cada uno
-jugara 2 turnos, y casi dos tercios del HP perdido venía de penalizaciones de monstruo
-(huir o perder contra Sombra del Vacío o AZAZEL quita 15 o 28 de 25–40 HP, y con manos
-normales casi nunca se les gana). Los turnos de la tabla salen de esas simulaciones
-(1000 partidas de 2 jugadores y 400 de 4 por duración): son una estimación, no una
-garantía. La IA juega de forma sencilla (solo grupos del mismo valor), así que con
-personas que arman Doble Duo o Full House las partidas probablemente sean algo más cortas.
+Por qué. Simulando miles de partidas IA contra IA con las reglas originales:
+
+- Una partida 1 vs 1 duraba una mediana de 2,5 turnos por jugador y casi dos tercios del HP
+  perdido venía de penalizaciones de monstruo.
+- Al monstruo se lo enfrentaba con la mano que hubiera en el momento de robarlo: 2,2 cartas
+  de media, y en ~35% de los encuentros ninguna carta de ataque. La probabilidad de poder
+  ganarle era 1,3% al Ladrón, ~0% a la Sombra y 0% a AZAZEL (con 4 cartas como máximo, sus
+  45 HP son inalcanzables sin la Daga de Sacrificio). "Combatir" era una opción falsa.
+
+Con las reglas de Normal, se enfrenta al monstruo con 5 cartas y en ese combate se le puede
+ganar al Ladrón ~32% de las veces, a la Sombra ~13% y a AZAZEL ~5%; como el daño se
+acumula, los jefes se vencen en 2–3 combates. Aun así AZAZEL sigue siendo raro de matar
+(~7% de las partidas 1 vs 1 en Normal, ~17% en Larga) y los monstruos siguen siendo la
+principal fuente de daño.
+
+Las cifras salen de simulaciones (1000 partidas de 2 jugadores y 400 de 4 por duración):
+son una estimación, no una garantía. La IA ataca a los rivales de forma sencilla (solo
+grupos del mismo valor), así que entre personas las partidas probablemente sean algo más
+cortas.
 
 No se escalan el HP de la Capa del Fénix (12), el premio de AZAZEL (+15 HP máximo), los
-costes de la Daga (4 HP) y la Transfusión (6 HP) ni la pérdida del Sanguinario
-(1 HP por turno): en Normal y Larga pesan relativamente menos.
+costes de la Daga (4 HP) y la Transfusión (6 HP) ni la pérdida del Sanguinario (1 HP por
+turno). Probé también que los monstruos no pudieran eliminar a nadie, pero sin ese "reloj"
+aparecían partidas que no terminaban nunca, así que se descartó.
+
+Caso límite conocido: en Normal y Larga los monstruos derrotados salen del mazo. En ~0,15%
+de las partidas de 4 IA en Larga, los jugadores que quedan ya no tienen monstruos ni cartas
+de ataque suficientes y la partida se alarga sin fin (se curan más de lo que se dañan).
 
 ## Decisiones de diseño donde el documento original era ambiguo o incompleto
 
@@ -140,6 +162,12 @@ qué es regla original y qué es una decisión de implementación:
   monstruo). Para no inventar una mecánica de obtención, **no están implementadas
   en esta versión**; el paso 2 del orden de resolución queda como no-op, listo para
   añadirlas si se define su origen.
+- **Cleptómano contra monstruos**: su desventaja ("los monstruos tienen +4 HP contra él")
+  aparecía en la interfaz pero no estaba aplicada; ahora sí, en todas las duraciones.
+- **Mazo sin cartas jugables**: las cartas pasan de un mazo a otro (Mercado Negro, Ladrón,
+  Cleptómano) y un mazo puede quedarse solo con Sucesos. Tras una vuelta entera al mazo sin
+  conseguir una carta jugable, el robo se detiene (antes podía quedarse robando Sucesos
+  para siempre y colgar la página).
 - **Combate contra monstruos**: la tabla de "mínimo para combatir" (p. ej. "Poker+"
   contra Sombra del Vacío, 30 HP) es inconsistente con los rangos de daño reales (un
   Poker de valor 1 da 29, menos de 30). Se implementó la regla textual explícita de

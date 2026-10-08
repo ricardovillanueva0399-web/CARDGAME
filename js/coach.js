@@ -25,12 +25,18 @@
     return 'No te quedan cartas sueltas para convertir en Monedas. Pulsa "Terminar turno".';
   }
 
-  function monsterHint(pend, fightMode, selectedCount) {
+  function monsterHint(pend, fightMode, selectedCount, canFight, woundsStay) {
     if (!fightMode) {
+      if (canFight === false) {
+        return 'No tienes ninguna carta de ataque (negra) en la mano, asi que no puedes combatir: solo queda "Huir".';
+      }
       var flee = pend.canFlee
         ? '"Huir" te da una penalizacion fija pero segura.'
         : 'Esta vez el efecto que lo desencadeno no te deja huir: tendras que combatir.';
-      return '¡Un monstruo (' + pend.hp + ' HP)! "Combatir" arriesga la mano que tengas ahora contra el; ' + flee;
+      if (woundsStay && pend.canFlee) {
+        flee = 'Si no lo matas, la penalizacion es la misma que huir, pero el dano que le hagas se queda para la proxima vez: casi siempre conviene combatir.';
+      }
+      return '¡Un monstruo (' + pend.hp + ' HP)! "Combatir" usa las cartas de tu mano contra el. ' + flee;
     }
     if (selectedCount === 0) return 'Selecciona tus mejores cartas de Ataque (negras) de la mano para combatir.';
     return 'Pulsa "Confirmar ataque" para atacar al monstruo con esas cartas.';

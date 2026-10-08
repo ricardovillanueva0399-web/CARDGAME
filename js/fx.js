@@ -263,9 +263,10 @@
         burst(c.x, c.y, 'gold', 18);
         setLabel('¡Derrotado!', 'gold');
       },
-      resist: function (dealt) {
+      resist: function (dealt, hpLeft) {
         iconEl.classList.add('fx-stage-resist');
-        setLabel('Resiste' + (dealt !== undefined ? ' (' + dealt + ' de dano)' : ''), 'dmg');
+        if (hpLeft) setLabel('Resiste: le quedan ' + hpLeft + ' HP', 'dmg');
+        else setLabel('Resiste' + (dealt !== undefined ? ' (' + dealt + ' de dano)' : ''), 'dmg');
       },
       flee: function () {
         setLabel('Huiste', 'info');

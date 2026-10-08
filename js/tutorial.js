@@ -76,16 +76,25 @@
       body: function (dur) { return '' +
         '<div class="tut-table-wrap"><table class="tut-table">' +
         '<tr><th>Monstruo</th><th>HP</th><th>Penalizacion</th></tr>' +
-        '<tr><td>' + D.MONSTERS.ladron.icon + ' Ladron de Sombras</td><td>12</td><td>-' + D.monsterPenalty('ladron', dur) + ' HP y te roban 1 carta</td></tr>' +
-        '<tr><td>' + D.MONSTERS.sombra.icon + ' Sombra del Vacio</td><td>30</td><td>-' + D.monsterPenalty('sombra', dur) + ' HP</td></tr>' +
-        '<tr><td>' + D.MONSTERS.azazel.icon + ' AZAZEL (Jefe)</td><td>45</td><td>-' + D.monsterPenalty('azazel', dur) + ' HP</td></tr>' +
+        '<tr><td>' + D.MONSTERS.ladron.icon + ' Ladron de Sombras</td><td>' + D.monsterHp('ladron', dur) + '</td><td>-' + D.monsterPenalty('ladron', dur) + ' HP y te roban 1 carta</td></tr>' +
+        '<tr><td>' + D.MONSTERS.sombra.icon + ' Sombra del Vacio</td><td>' + D.monsterHp('sombra', dur) + '</td><td>-' + D.monsterPenalty('sombra', dur) + ' HP</td></tr>' +
+        '<tr><td>' + D.MONSTERS.azazel.icon + ' AZAZEL (Jefe)</td><td>' + D.monsterHp('azazel', dur) + '</td><td>-' + D.monsterPenalty('azazel', dur) + ' HP</td></tr>' +
         '</table></div>' +
         durationNote(dur) +
-        '<p>Al robar un Monstruo eliges: <strong>Combatir</strong> (formas un ataque con tu ' +
-        'mano actual) o <strong>Huir</strong> (penalizacion fija, el monstruo vuelve al ' +
-        'mazo).</p>' +
+        (D.durationOf(dur).monstersWait
+          ? '<p>Si robas un Monstruo, <strong>te espera hasta que termines de robar</strong>: lo ' +
+            'enfrentas con la mano completa. Eliges <strong>Combatir</strong> (formas un ataque) ' +
+            'o <strong>Huir</strong> (penalizacion fija, el monstruo vuelve al mazo).</p>'
+          : '<p>Al robar un Monstruo eliges: <strong>Combatir</strong> (formas un ataque con tu ' +
+            'mano actual) o <strong>Huir</strong> (penalizacion fija, el monstruo vuelve al ' +
+            'mazo).</p>') +
         '<p>Si tu dano es mayor o igual al HP del monstruo, muere y ganas una recompensa. Si ' +
-        'no llega, sufres la misma penalizacion que huir.</p>' +
+        'no llega, sufres la misma penalizacion que huir' +
+        (D.durationOf(dur).monsterWounds
+          ? ', pero <strong>el dano que le hiciste se queda</strong>: vuelve a tu mazo herido y ' +
+            'la proxima vez tendra menos HP. Los jefes se vencen en varios combates.</p>'
+          : '.</p>') +
+        '<p class="tut-note">El Cleptomano enfrenta a todos los monstruos con +4 HP.</p>' +
         '<p><strong>Derrotar cualquier monstruo abre la Tienda para todos los jugadores</strong>, ' +
         'no solo para quien lo vencio.</p>';
       }

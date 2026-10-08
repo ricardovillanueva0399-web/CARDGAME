@@ -545,21 +545,35 @@
   function buildMonsterOverlay() {
     var pend = game.pending;
     var player = S.byId(game, pend.playerId);
+    var rules = D.durationOf(game.durationId);
+    var penalty = D.monsterPenalty(pend.monsterId, game.durationId);
+    var canFight = global.VA_MONSTERS.canFight(game, player.id);
+    var extras = [];
+    if (pend.cofreBoosted) extras.push('+5 por Cofre Mimetico');
+    if (player.classId === 'cleptomano') extras.push('+4 contra el Cleptomano');
     var wrap = overlayWrap(
       '<h3><span class="monster-icon">' + PX.sprite(D.MONSTERS[pend.monsterId].icon, 'md') + '</span> Encuentro: ' + escapeHtml(pend.monsterName) + '</h3>' +
-      '<p>HP del monstruo: <strong>' + pend.hp + '</strong>' + (pend.cofreBoosted ? ' (+5 por Cofre Mimetico)' : '') + '</p>' +
-      '<p class="hint">Referencia de dificultad: ' + pend.minLabel + '. La regla real es: dano total &gt;= HP del monstruo.</p>'
+      '<p>HP del monstruo: <strong>' + pend.hp + '</strong>' + (pend.wounds ? ' / ' + pend.maxHp + ' (herido)' : '') +
+        (extras.length ? ' <span class="hint">(' + extras.join(', ') + ')</span>' : '') + '</p>' +
+      '<p>Si huyes o pierdes: <strong class="danger-text">-' + penalty + ' HP</strong>' +
+        (D.MONSTERS[pend.monsterId].fleeStealsCard ? ' y un rival te roba 1 carta' : '') + '.</p>' +
+      (rules.monsterWounds
+        ? '<p class="hint">Para matarlo necesitas ' + pend.hp + ' de dano. Si no llegas, el dano que le hagas se queda: vuelve a tu mazo herido.</p>'
+        : '<p class="hint">Referencia de dificultad: ' + pend.minLabel + '. La regla real es: dano total &gt;= HP del monstruo.</p>')
     );
     var modal = wrap.querySelector('.modal');
 
     if (game.isTutorial && !player.isAI) {
-      modal.appendChild(el('<p class="coach-line">' + escapeHtml(global.VA_COACH.monsterHint(pend, ui.fightMode, Object.keys(ui.fightSelectedIds).length)) + '</p>'));
+      modal.appendChild(el('<p class="coach-line">' + escapeHtml(global.VA_COACH.monsterHint(pend, ui.fightMode, Object.keys(ui.fightSelectedIds).length, canFight, rules.monsterWounds)) + '</p>'));
     }
 
     if (!ui.fightMode) {
-      var fightBtn = el('<button class="btn btn-primary">Combatir</button>');
+      var fightBtn = el('<button class="btn btn-primary"' + (canFight ? '' : ' disabled') + '>Combatir' + (canFight ? '' : ' (no tienes cartas de ataque)') + '</button>');
       var fleeBtn = el('<button class="btn"' + (pend.canFlee ? '' : ' disabled') + '>Huir' + (pend.canFlee ? '' : ' (no permitido)') + '</button>');
-      fightBtn.addEventListener('click', function () { ui.fightMode = true; ui.fightSelectedIds = {}; ui.fightUseDaga = false; renderAll(); });
+      fightBtn.addEventListener('click', function () {
+        if (!canFight) return;
+        ui.fightMode = true; ui.fightSelectedIds = {}; ui.fightUseDaga = false; renderAll();
+      });
       fleeBtn.addEventListener('click', function () {
         if (!pend.canFlee) return;
         var res = global.VA_MONSTERS.decide(game, player.id, 'flee', [], false);
@@ -904,7 +918,7 @@
         stage.defeat();
         FX.banner('✨ <strong>' + escapeHtml(m.name) + '</strong> derrotado: ¡la Tienda se abre para todos!', 'gold');
       } else {
-        stage.resist(evt.amount || undefined);
+        stage.resist(evt.amount || undefined, evt.hpLeft);
       }
       return FX.wait(700);
     }).then(function () {

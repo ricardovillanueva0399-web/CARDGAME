@@ -671,6 +671,7 @@ input[type=checkbox]:checked {
 .shop-item strong { color: var(--accent); font-weight: 400; }
 .shop-item .desc { color: var(--muted); font-size: 18px; }
 .shop-item .btn { flex-shrink: 0; }
+.danger-text { color: #ff6b62; font-weight: 400; }
 .error-msg { color: var(--hp-low); font-size: 20px; min-height: 1.1em; margin: 6px 0; flex-basis: 100%; }
 
 /* --- Tutorial "Como Jugar" --- */

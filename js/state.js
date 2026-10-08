@@ -167,29 +167,59 @@
   function drawLoop(game, player, target, onComplete) {
     target = target === undefined ? D.HAND_SIZE : target;
     onComplete = onComplete || 'action';
-    game.drawContext = { playerId: player.id, target: target, onComplete: onComplete };
-    while (player.hand.length < target) {
-      if (game._turnEnded) { game._turnEnded = false; return; }
-
-      var card = DECK.drawOne(player.deck);
-      if (!card) break;
-
-      if (card.kind === 'event') {
-        logMsg(game, player.name + ' roba un Suceso: ' + card.name + '.');
-        pushFx(game, { type: 'event_card', eventId: card.eventId, playerId: player.id });
-        player.deck.discardPile.push(card);
-        global.VA_EVENTS.apply(game, player, card);
+    /* Monstruos que esperan a que termine el robo (ver D.DURATIONS.monstersWait). La cola se
+       conserva al reanudar el robo tras un Suceso, la Tienda o el propio combate. */
+    var prev = game.drawContext && game.drawContext.playerId === player.id ? game.drawContext : null;
+    var ambush = prev && prev.ambush ? prev.ambush : [];
+    /* dry: robos seguidos sin conseguir ninguna carta jugable (se conserva al reanudar). */
+    var dry = prev && prev.dry ? prev.dry : 0;
+    var ctx = { playerId: player.id, target: target, onComplete: onComplete, ambush: ambush, dry: dry };
+    game.drawContext = ctx;
+    var monstersWait = D.durationOf(game.durationId).monstersWait;
+    for (;;) {
+      while (player.hand.length < target) {
         if (game._turnEnded) { game._turnEnded = false; return; }
-        if (game.pending) return;
-        continue;
-      }
 
-      if (card.kind === 'monster') {
-        global.VA_MONSTERS.startEncounter(game, player, card, true);
-        return;
-      }
+        /* Las cartas pasan de un mazo a otro (Mercado Negro, Ladron, Cleptomano) y un mazo puede
+           quedarse solo con Sucesos y Monstruos: sin este limite el jugador robaria Sucesos para
+           siempre y la pagina se colgaria. Tras una vuelta entera al mazo sin carta jugable, para. */
+        if (ctx.dry > player.deck.drawPile.length + player.deck.discardPile.length + 1) {
+          logMsg(game, player.name + ' no tiene mas cartas jugables en su mazo.');
+          break;
+        }
+        var card = DECK.drawOne(player.deck);
+        if (!card) break;
+        ctx.dry += 1;
 
-      player.hand.push(card);
+        if (card.kind === 'event') {
+          logMsg(game, player.name + ' roba un Suceso: ' + card.name + '.');
+          pushFx(game, { type: 'event_card', eventId: card.eventId, playerId: player.id });
+          player.deck.discardPile.push(card);
+          global.VA_EVENTS.apply(game, player, card);
+          if (game._turnEnded) { game._turnEnded = false; return; }
+          if (game.pending) return;
+          continue;
+        }
+
+        if (card.kind === 'monster') {
+          if (monstersWait) {
+            ambush.push({ card: card, canFlee: true });
+            logMsg(game, player.name + ' roba un Monstruo: ' + card.name + ' espera a que termine de robar.');
+            continue;
+          }
+          global.VA_MONSTERS.startEncounter(game, player, card, true);
+          return;
+        }
+
+        player.hand.push(card);
+        ctx.dry = 0;
+      }
+      if (ambush.length === 0) break;
+      var next = ambush.shift();
+      global.VA_MONSTERS.startEncounter(game, player, next.card, next.canFlee);
+      /* Derrota automatica que lo elimino (combate obligatorio sin cartas de ataque). */
+      if (game._turnEnded) { game._turnEnded = false; return; }
+      if (game.pending) return;
     }
     game.drawContext = null;
     if (onComplete === 'action') beginActionPhase(game, player);
@@ -219,6 +249,7 @@
     }
 
     player.vampHealedThisTurn = 0;
+    game.drawContext = null;
 
     if (game.flags.nieblaTurnsLeft > 0) game.flags.nieblaTurnsLeft -= 1;
 

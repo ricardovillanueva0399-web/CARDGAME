@@ -164,22 +164,29 @@
 
   /*
    * Duracion de la partida. No esta en el documento de diseno (ver README): con las reglas
-   * originales casi todo el HP se pierde por penalizaciones de monstruo y las partidas duran
-   * muy poco. 'rapida' conserva las reglas v3.3 tal cual; las otras multiplican el HP maximo
-   * de las clases y reducen a la mitad la penalizacion por huir o perder contra un monstruo.
+   * originales casi todo el HP se pierde por penalizaciones de monstruo, a los monstruos
+   * practicamente nunca se les puede ganar y las partidas duran muy poco. 'rapida' conserva
+   * las reglas v3.3 tal cual. Las otras multiplican el HP maximo de las clases, dejan a los
+   * monstruos con la mitad de HP y la mitad de penalizacion, y cambian como se les pelea:
+   *  - monstersWait: el monstruo robado espera a que termines de robar, asi lo enfrentas con
+   *    la mano completa y no con las 1-2 cartas que tenias cuando aparecio.
+   *  - monsterWounds: el dano que le haces se queda; si sobrevive vuelve a tu mazo herido.
    */
   var DURATIONS = {
     rapida: {
-      id: 'rapida', name: 'Rapida (reglas originales v3.3)', hpMult: 1, penaltyMult: 1,
-      desc: 'HP y penalizaciones de monstruo originales: un par de malos encuentros te eliminan.'
+      id: 'rapida', name: 'Rapida (reglas originales v3.3)', hpMult: 1, penaltyMult: 1, monsterHpMult: 1,
+      monstersWait: false, monsterWounds: false,
+      desc: 'HP y monstruos originales: casi imposibles de vencer y un par de malos encuentros te eliminan.'
     },
     normal: {
-      id: 'normal', name: 'Normal', hpMult: 1.5, penaltyMult: 0.5,
-      desc: 'HP x1.5 y penalizaciones de monstruo a la mitad.'
+      id: 'normal', name: 'Normal', hpMult: 1.5, penaltyMult: 0.5, monsterHpMult: 0.5,
+      monstersWait: true, monsterWounds: true,
+      desc: 'HP x1.5. Monstruos con la mitad de HP y de dano, que esperan a que completes tu mano y conservan el dano que les hagas.'
     },
     larga: {
-      id: 'larga', name: 'Larga', hpMult: 2, penaltyMult: 0.5,
-      desc: 'HP x2 y penalizaciones de monstruo a la mitad.'
+      id: 'larga', name: 'Larga', hpMult: 2, penaltyMult: 0.5, monsterHpMult: 0.5,
+      monstersWait: true, monsterWounds: true,
+      desc: 'HP x2. Monstruos con la mitad de HP y de dano, que esperan a que completes tu mano y conservan el dano que les hagas.'
     }
   };
   var DEFAULT_DURATION = 'normal';
@@ -187,6 +194,7 @@
   function durationOf(id) { return DURATIONS[id] || DURATIONS[DEFAULT_DURATION]; }
   function classMaxHp(classId, durationId) { return Math.round(CLASSES[classId].maxHp * durationOf(durationId).hpMult); }
   function monsterPenalty(monsterId, durationId) { return Math.round(MONSTERS[monsterId].fleeHpLoss * durationOf(durationId).penaltyMult); }
+  function monsterHp(monsterId, durationId) { return Math.round(MONSTERS[monsterId].hp * (durationOf(durationId).monsterHpMult || 1)); }
 
   global.VA_DATA = {
     CLASSES: CLASSES,
@@ -201,6 +209,7 @@
     DEFAULT_DURATION: DEFAULT_DURATION,
     durationOf: durationOf,
     classMaxHp: classMaxHp,
-    monsterPenalty: monsterPenalty
+    monsterPenalty: monsterPenalty,
+    monsterHp: monsterHp
   };
 })(window);

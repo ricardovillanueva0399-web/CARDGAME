@@ -19,10 +19,18 @@
     return player.hand.some(function (c) { return c.color === 'negra'; });
   }
 
+  /* HP completo del monstruo para este jugador: base, +5 por Cofre Mimetico y +4 contra el
+     Cleptomano (desventaja de la clase). */
+  function fullHpFor(game, player, base) {
+    return D.monsterHp(base.id, game.durationId) + (game.flags.cofreMimetico ? 5 : 0) + (player.classId === 'cleptomano' ? 4 : 0);
+  }
+
   function startEncounter(game, player, monsterCard, canFlee) {
     var s = state();
     var base = D.MONSTERS[monsterCard.monsterId];
-    var hp = base.hp + (game.flags.cofreMimetico ? 5 : 0);
+    var maxHp = fullHpFor(game, player, base);
+    var wounds = monsterCard.wounds || 0;
+    var hp = Math.max(1, maxHp - wounds);
 
     /*
      * Caso limite: un encuentro obligatorio (Llamada de la Caceria, canFlee=false) puede
@@ -35,7 +43,7 @@
       s.logMsg(game, player.name + ' se encuentra con ' + base.name + ' (' + hp + ' HP) sin ninguna carta util para atacar: pierde el combate por defecto.');
       s.pushFx(game, { type: 'monster_fight', playerId: player.id, monsterId: base.id, win: false, amount: 0, hp: hp });
       applyLosePenalty(game, player, base.id);
-      reinsertMonster(game, player, base.id);
+      reinsertMonster(game, player, base.id, wounds);
       /*
        * OJO: startEncounter() siempre se ejecuta sincronamente dentro de un drawLoop() en
        * curso (este caso, via el Suceso Llamada de la Caceria). NO llamar aqui a
@@ -55,11 +63,19 @@
       monsterId: base.id,
       monsterName: base.name,
       hp: hp,
+      maxHp: maxHp,
+      wounds: wounds,
       minLabel: base.minLabel,
       canFlee: canFlee,
       cofreBoosted: game.flags.cofreMimetico
     };
-    s.logMsg(game, player.name + ' se encuentra con ' + base.name + ' (' + hp + ' HP)' + (canFlee ? '.' : ' y debe combatir obligatoriamente.'));
+    s.logMsg(game, player.name + ' se encuentra con ' + base.name + ' (' + hp + (wounds ? '/' + maxHp + ' HP, herido)' : ' HP)') + (canFlee ? '.' : ' y debe combatir obligatoriamente.'));
+  }
+
+  /* Hay cartas con las que combatir: lo usa la interfaz para no ofrecer un combate imposible. */
+  function canFight(game, playerId) {
+    var player = state().byId(game, playerId);
+    return !!player && hasAnyAttackableCard(player);
   }
 
   function forceEncounter(game, player) {
@@ -77,6 +93,13 @@
       return;
     }
     var monsterCard = player.deck.drawPile.splice(idx, 1)[0];
+    /* Con monstruos que esperan, el combate obligatorio tambien llega al terminar de robar. */
+    var ctx = game.drawContext;
+    if (D.durationOf(game.durationId).monstersWait && ctx && ctx.playerId === player.id && ctx.ambush) {
+      ctx.ambush.push({ card: monsterCard, canFlee: false });
+      s.logMsg(game, monsterCard.name + ' llegara en cuanto ' + player.name + ' termine de robar.');
+      return;
+    }
     startEncounter(game, player, monsterCard, false);
   }
 
@@ -99,8 +122,10 @@
     s.killOrRevive(game, player);
   }
 
-  function reinsertMonster(game, player, monsterId) {
+  /* wounds: dano acumulado que conserva el monstruo (solo con D.DURATIONS.monsterWounds). */
+  function reinsertMonster(game, player, monsterId, wounds) {
     var card = { id: global.VA_DECK.nextId(), kind: 'monster', monsterId: monsterId, name: D.MONSTERS[monsterId].name };
+    if (wounds > 0) card.wounds = wounds;
     global.VA_DECK.insertMonsterCard(player.deck, card);
   }
 
@@ -201,7 +226,7 @@
       game.pending = null;
       s.pushFx(game, { type: 'monster_flee', playerId: player.id, monsterId: monsterId });
       applyLosePenalty(game, player, monsterId);
-      reinsertMonster(game, player, monsterId);
+      reinsertMonster(game, player, monsterId, pend.wounds);
       if (s.endTurnIfPlayerDied(game, player)) return { ok: true };
       s.resumeDraw(game);
       return { ok: true };
@@ -225,9 +250,15 @@
       var out = combat().resolveMonsterAttack(player, fakeMonster, result, { useDaga: !!useDaga });
       if (useDaga) s.consumeLoot(player, 'daga');
       out.log.forEach(function (l) { s.logMsg(game, l); });
+      var keepsWounds = D.durationOf(game.durationId).monsterWounds;
+      var woundsAfter = keepsWounds ? pend.wounds + out.damage : pend.wounds;
+      if (!out.win && keepsWounds) {
+        s.logMsg(game, pend.monsterName + ' vuelve al mazo herido: le quedan ' + (monsterHp - out.damage) + ' HP.');
+      }
       s.pushFx(game, {
         type: 'monster_fight', playerId: player.id, monsterId: monsterId, win: out.win,
-        amount: out.damage, hp: monsterHp, levelName: result.levelName
+        amount: out.damage, hp: monsterHp, levelName: result.levelName,
+        hpLeft: !out.win && keepsWounds ? monsterHp - out.damage : null
       });
 
       selected.concat(result.wastedCards).forEach(function (c) {
@@ -243,7 +274,7 @@
         grantReward(game, player, monsterId, pend.cofreBoosted);
       } else {
         applyLosePenalty(game, player, monsterId);
-        reinsertMonster(game, player, monsterId);
+        reinsertMonster(game, player, monsterId, woundsAfter);
         if (s.endTurnIfPlayerDied(game, player)) return { ok: true };
         s.resumeDraw(game);
       }
@@ -257,6 +288,7 @@
     startEncounter: startEncounter,
     forceEncounter: forceEncounter,
     decide: decide,
+    canFight: canFight,
     resolveAzazelChoice: resolveAzazelChoice,
     afterMonsterResolved: afterMonsterResolved
   };

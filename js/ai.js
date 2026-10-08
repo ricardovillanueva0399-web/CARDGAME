@@ -62,7 +62,9 @@
       s.playHand(game, actor.id, ids(bestBlack), 'attack', target.id, false);
       return;
     }
-    if (bestRed.length >= 1 && actor.hp < actor.maxHp) {
+    /* Sin cartas negras se cura aunque tenga la vida llena: si pasara, una mano de parejas
+       rojas (que no se pueden descartar por Monedas) se quedaria igual para siempre. */
+    if (bestRed.length >= 1) {
       s.playHand(game, actor.id, ids(bestRed), 'heal', null, false);
       return;
     }
@@ -87,6 +89,26 @@
     return value;
   }
 
+  /* Contra un monstruo solo importa el dano: prueba todas las combinaciones de la mano (lo
+     normal 5 cartas, 31 combinaciones) y se queda con la de mas dano; a igual dano, la de
+     menos cartas. */
+  function strongestAttack(actor, cards) {
+    var best = [];
+    var bestValue = 0;
+    var isAlq = actor.classId === 'alquimista';
+    for (var mask = 1; mask < (1 << cards.length); mask += 1) {
+      var sel = cards.filter(function (c, i) { return mask & (1 << i); });
+      if (!HANDS().evaluateHand(sel, 'attack', isAlq).valid) continue;
+      /* El motor nunca hace menos de 1 de dano (p. ej. Taumaturgo con -4 a una carta baja). */
+      var value = Math.max(1, estimateAttackValue(null, actor, sel));
+      if (value > bestValue || (value === bestValue && sel.length < best.length)) {
+        best = sel;
+        bestValue = value;
+      }
+    }
+    return best;
+  }
+
   function decideMonster(game, actor, pend) {
     /* Nota: bestGroup agrupa por valor numerico crudo. Para el Alquimista eso podria
        juntar, p. ej., un 3 negro con un 3 rojo pensando que forman pareja, cuando en
@@ -95,14 +117,17 @@
        negras aqui, igual que el resto de clases (juega algo mas conservador de lo que
        su pasiva permitiria, pero de forma correcta). */
     var pool = actor.hand.filter(function (c) { return c.color === 'negra'; });
-    var group = bestGroup(pool);
+    var group = strongestAttack(actor, pool);
     /* Combate obligatorio sin ninguna carta negra: solo puede pasarle al Alquimista (al resto
        el motor ya le da la derrota automatica). Con un grupo vacio el motor rechaza el combate
        y la IA lo reintentaria sin fin, congelando la partida; usa sus rojas al 70%. */
-    if (group.length === 0 && !pend.canFlee) group = bestGroup(actor.hand);
+    if (group.length === 0 && !pend.canFlee) group = strongestAttack(actor, actor.hand);
     var estimate = estimateAttackValue(game, actor, group);
 
-    var shouldFight = group.length > 0 && (!pend.canFlee || estimate >= pend.hp);
+    /* Si el dano se acumula, pelear nunca es peor que huir: la penalizacion es la misma y las
+       cartas usadas se reponen al seguir robando. */
+    var woundsStay = D.durationOf(game.durationId).monsterWounds;
+    var shouldFight = group.length > 0 && (!pend.canFlee || estimate >= pend.hp || woundsStay);
     if (shouldFight) {
       MONSTERS().decide(game, actor.id, 'fight', ids(group), false);
     } else if (pend.canFlee) {
