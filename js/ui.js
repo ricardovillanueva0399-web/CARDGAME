@@ -509,6 +509,13 @@
     }
   }
 
+  /* Boton para consultar el Compendio sin cerrar la decision en curso. */
+  function compendiumButton(tabId) {
+    var b = el('<button class="btn btn-small cmp-link">Ver en el Compendio</button>');
+    b.addEventListener('click', function () { global.VA_COMPENDIUM.open(game.durationId, tabId); });
+    return b;
+  }
+
   function overlayWrap(innerHtml) {
     return el('<div class="overlay' + (overlayEnter ? ' enter' : '') + '"><div class="modal">' + innerHtml + '</div></div>');
   }
@@ -582,6 +589,7 @@
       });
       modal.appendChild(fightBtn);
       modal.appendChild(fleeBtn);
+      modal.appendChild(el('<div></div>')).appendChild(compendiumButton('monstruos'));
       return wrap;
     }
 
@@ -641,6 +649,7 @@
     if (game.isTutorial && !player.isAI) {
       modal.appendChild(el('<p class="coach-line">' + escapeHtml(global.VA_COACH.shopHint()) + '</p>'));
     }
+    modal.appendChild(compendiumButton('botin'));
 
     modal.appendChild(el('<h4>Botin (uso unico)</h4>'));
     Object.keys(D.LOOT).forEach(function (id) {

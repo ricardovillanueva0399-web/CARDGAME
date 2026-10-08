@@ -36,6 +36,7 @@
     <div class="field-row">
       <button id="start-game-btn" class="btn btn-primary">Iniciar Partida</button>
       <button id="how-to-play-btn" class="btn">Como jugar</button>
+      <button id="compendium-btn" class="btn">Compendio</button>
     </div>
     <p class="hint">Local, pasar y jugar. Cada jugador vera su mano solo cuando le toque.</p>
     <hr class="divider">
@@ -59,7 +60,10 @@
 
       <aside id="side-panel">
         <div id="log-panel"><div id="log-list"></div></div>
-        <button id="how-to-play-btn-game" class="btn btn-small">Como jugar</button>
+        <div class="side-buttons">
+          <button id="how-to-play-btn-game" class="btn btn-small">Como jugar</button>
+          <button id="compendium-btn-game" class="btn btn-small">Compendio</button>
+        </div>
       </aside>
     </div>
 
@@ -68,6 +72,7 @@
   </section>
 
   <div id="tutorial-root"></div>
+  <div id="compendium-root"></div>
 
 </div>
 
@@ -80,6 +85,7 @@
 <script src="js/shop.js"></script>
 <script src="js/state.js"></script>
 <script src="js/tutorial.js"></script>
+<script src="js/compendium.js"></script>
 <script src="js/coach.js"></script>
 <script src="js/ai.js"></script>
 <script src="js/pixel.js"></script>

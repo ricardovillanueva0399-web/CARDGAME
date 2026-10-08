@@ -25,7 +25,9 @@
       vampHealedThisTurn: 0,
       espejoRotoActive: false,
       manoFriaActive: false,
-      phoenixUsed: false
+      phoenixUsed: false,
+      turnsTaken: 0,
+      relojUsedTurn: null
     };
   }
 
@@ -249,6 +251,7 @@
     }
 
     player.vampHealedThisTurn = 0;
+    player.turnsTaken += 1;
     game.drawContext = null;
 
     if (game.flags.nieblaTurnsLeft > 0) game.flags.nieblaTurnsLeft -= 1;

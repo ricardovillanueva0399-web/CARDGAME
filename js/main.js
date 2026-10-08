@@ -108,6 +108,12 @@
     document.getElementById('how-to-play-btn-game').addEventListener('click', function () {
       global.VA_TUTORIAL.open(currentGame ? currentGame.durationId : selectedDuration());
     });
+    document.getElementById('compendium-btn').addEventListener('click', function () {
+      global.VA_COMPENDIUM.open(selectedDuration());
+    });
+    document.getElementById('compendium-btn-game').addEventListener('click', function () {
+      global.VA_COMPENDIUM.open(currentGame ? currentGame.durationId : selectedDuration());
+    });
     document.getElementById('start-tutorial-btn').addEventListener('click', startTutorial);
   }
 

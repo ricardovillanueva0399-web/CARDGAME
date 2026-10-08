@@ -31,6 +31,7 @@ js/monsters.js        Encuentros con los 3 Monstruos de Emboscada
 js/shop.js            Tienda de la Arena
 js/state.js           Motor de turnos y estado de partida
 js/tutorial.js         Panel de referencia estático "Cómo jugar" (10 pasos)
+js/compendium.js       Compendio: referencia de clases, monstruos, manos, sucesos, botín, artefactos y reglas
 js/coach.js            Textos de pista contextuales del Modo Tutorial
 js/ai.js               IA que juega turnos completos en el Modo Tutorial
 js/pixel.js            Arte pixel: palos de la baraja y sprites generados desde los emoji
@@ -38,6 +39,22 @@ js/fx.js               Efectos visuales (orbes, números flotantes, estallidos, 
 js/ui.js              Renderizado e interacción con el DOM
 js/main.js            Pantalla de configuración y arranque
 ```
+
+## Compendio
+
+El botón **Compendio** (en la preparación y en la barra lateral durante la partida) abre una
+referencia completa en pestañas: Clases, Monstruos, Combinaciones, Sucesos, Botín,
+Artefactos y Reglas (duraciones, estructura del turno, Monedas, Tienda y orden de cálculo
+del daño). También se abre desde la ventana de un monstruo (en la pestaña Monstruos) y desde
+la Tienda (en Botín), sin cerrar la decisión en curso.
+
+- Los números (HP, penalizaciones, rangos de cada mano, precios) se leen de `js/data.js` y se
+  ajustan a la duración elegida, así que no pueden desincronizarse de las reglas.
+- Los textos de "cómo funciona" describen lo que hace esta implementación, que en algunos
+  puntos difiere del documento de diseño (ver la lista de decisiones más abajo). Por
+  ejemplo, avisa que la Calculadora Cuántica no aporta nada porque la vista previa del daño
+  ya se muestra siempre.
+- Se maneja con teclado: flechas izquierda/derecha cambian de pestaña y Escape cierra.
 
 ## Estilo visual: tele CRT + RPG pixel
 
@@ -162,6 +179,10 @@ qué es regla original y qué es una decisión de implementación:
   monstruo). Para no inventar una mecánica de obtención, **no están implementadas
   en esta versión**; el paso 2 del orden de resolución queda como no-op, listo para
   añadirlas si se define su origen.
+- **Reloj de Arena** ("ignora el daño de un monstruo una vez cada 3 turnos"): se vendía en
+  la Tienda pero no tenía efecto. Ahora anula el HP que quitaría huir o perder contra un
+  monstruo (el Ladrón igual roba la carta) y vuelve a estar disponible 3 turnos propios
+  después de usarse.
 - **Cleptómano contra monstruos**: su desventaja ("los monstruos tienen +4 HP contra él")
   aparecía en la interfaz pero no estaba aplicada; ahora sí, en todas las duraciones.
 - **Mazo sin cartas jugables**: las cartas pasan de un mazo a otro (Mercado Negro, Ladrón,
@@ -182,7 +203,8 @@ qué es regla original y qué es una decisión de implementación:
   artefactos aleatorios, y se lo indica explícitamente en la interfaz.
 - **Mano Fría / Espejo Roto / Yep!**: se implementaron como activables por el
   propio jugador en su turno. Yep! en esta versión puede cancelar una Mano Fría o
-  un Espejo Roto ya armados, o una Transfusión Prohibida en curso, de un rival;
+  un Espejo Roto ya armados de un rival (la Transfusión Prohibida se resuelve al
+  instante, así que no hay nada que cancelar);
   cancelar un ataque con Daga de Sacrificio ya resuelto no está soportado (queda
   fuera del alcance de esta versión por la complejidad de deshacer un combate ya
   aplicado).

@@ -50,7 +50,7 @@
         '<tr><th>Mano</th><th>Formula</th><th>Rango</th></tr>' +
         '<tr><td>Carta Suelta</td><td>valor</td><td>1-5</td></tr>' +
         '<tr><td>Duo (pareja)</td><td>5 + valor</td><td>6-10</td></tr>' +
-        '<tr><td>Doble Duo</td><td>10 + pareja alta</td><td>11-15</td></tr>' +
+        '<tr><td>Doble Duo</td><td>10 + pareja alta</td><td>12-15</td></tr>' +
         '<tr><td>Tercia</td><td>15 + valor</td><td>16-20</td></tr>' +
         '<tr><td>Escalera *</td><td>fijo</td><td>21</td></tr>' +
         '<tr><td>Full House</td><td>22 + valor tercia</td><td>23-27</td></tr>' +

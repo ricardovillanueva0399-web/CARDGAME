@@ -143,20 +143,20 @@
   };
 
   var LOOT = {
-    yep: { id: 'yep', name: 'Yep!', price: 3, desc: 'Cancela la ultima carta de botin o accion de un rival.' },
-    mano_fria: { id: 'mano_fria', name: 'Mano Fria', price: 3, desc: 'Tu proxima mano no puede ser robada ni cancelada.' },
-    transfusion: { id: 'transfusion', name: 'Transfusion Prohibida', price: 4, desc: 'Pierdes 6 HP para robar 3 cartas. No usable con 6 HP o menos.' },
-    daga: { id: 'daga', name: 'Daga de Sacrificio', price: 5, desc: '+15 de dano base al proximo ataque. Resta 4 HP al usarla. No usable con 4 HP o menos.' },
-    espejo_roto: { id: 'espejo_roto', name: 'Espejo Roto', price: 5, desc: 'Refleja el proximo ataque recibido al 50%. Se consume al activarse.' },
-    bolsa_oro: { id: 'bolsa_oro', name: 'Bolsa de Oro', price: null, desc: 'Vale 20 monedas exactas al canjearla en la Tienda.' }
+    yep: { id: 'yep', name: 'Yep!', icon: '✋', price: 3, desc: 'Cancela la ultima carta de botin o accion de un rival.' },
+    mano_fria: { id: 'mano_fria', name: 'Mano Fria', icon: '🧊', price: 3, desc: 'Tu proxima mano no puede ser robada ni cancelada.' },
+    transfusion: { id: 'transfusion', name: 'Transfusion Prohibida', icon: '💉', price: 4, desc: 'Pierdes 6 HP para robar 3 cartas. No usable con 6 HP o menos.' },
+    daga: { id: 'daga', name: 'Daga de Sacrificio', icon: '🔪', price: 5, desc: '+15 de dano base al proximo ataque. Resta 4 HP al usarla. No usable con 4 HP o menos.' },
+    espejo_roto: { id: 'espejo_roto', name: 'Espejo Roto', icon: '💔', price: 5, desc: 'Refleja el proximo ataque recibido al 50%. Se consume al activarse.' },
+    bolsa_oro: { id: 'bolsa_oro', name: 'Bolsa de Oro', icon: '🪙', price: null, desc: 'Vale 20 monedas exactas al canjearla en la Tienda.' }
   };
 
   var ARTIFACTS = {
-    calculadora: { id: 'calculadora', name: 'Calculadora Cuantica', price: 4, desc: 'Muestra el dano/curacion exacto antes de confirmar.' },
-    reloj: { id: 'reloj', name: 'Reloj de Arena', price: 6, desc: 'Ignora el dano de un monstruo una vez cada 3 turnos.' },
-    nucleo: { id: 'nucleo', name: 'Nucleo de Acero', price: 7, desc: '(Escudo) Reduce todo dano recibido en 3 (minimo 1). Incompatible con Espejo.', shield: true, incompatibleClass: 'espejo' },
-    anillo: { id: 'anillo', name: 'Anillo del Vampiro', price: 7, desc: 'Mejora la recuperacion del Sanguinario a 1 HP por cada 4 de dano.' },
-    capa: { id: 'capa', name: 'Capa del Fenix', price: 10, desc: 'Una vez por partida: al llegar a 0 HP, revives con 12 HP.' }
+    calculadora: { id: 'calculadora', name: 'Calculadora Cuantica', icon: '🧮', price: 4, desc: 'Muestra el dano/curacion exacto antes de confirmar.' },
+    reloj: { id: 'reloj', name: 'Reloj de Arena', icon: '⏳', price: 6, desc: 'Ignora el dano de un monstruo una vez cada 3 turnos.' },
+    nucleo: { id: 'nucleo', name: 'Nucleo de Acero', icon: '🛡️', price: 7, desc: '(Escudo) Reduce todo dano recibido en 3 (minimo 1). Incompatible con Espejo.', shield: true, incompatibleClass: 'espejo' },
+    anillo: { id: 'anillo', name: 'Anillo del Vampiro', icon: '💍', price: 7, desc: 'Mejora la recuperacion del Sanguinario a 1 HP por cada 4 de dano.' },
+    capa: { id: 'capa', name: 'Capa del Fenix', icon: '🔥', price: 10, desc: 'Una vez por partida: al llegar a 0 HP, revives con 12 HP.' }
   };
 
   var MAX_ARTIFACTS = 3;

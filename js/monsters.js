@@ -107,8 +107,16 @@
     var s = state();
     var base = D.MONSTERS[monsterId];
     var loss = D.monsterPenalty(monsterId, game.durationId);
+    /* Reloj de Arena: ignora el HP que quitaria un monstruo, una vez cada 3 turnos propios. */
+    var reloj = player.artifacts.indexOf('reloj') !== -1 &&
+      (player.relojUsedTurn === null || player.turnsTaken - player.relojUsedTurn >= 3);
+    if (reloj) {
+      player.relojUsedTurn = player.turnsTaken;
+      s.logMsg(game, 'Reloj de Arena: ' + player.name + ' ignora los ' + loss + ' HP de dano de ' + base.name + '.');
+      loss = 0;
+    }
     player.hp = Math.max(0, player.hp - loss);
-    s.logMsg(game, player.name + ' sufre la penalizacion de ' + base.name + ': -' + loss + ' HP.');
+    if (!reloj) s.logMsg(game, player.name + ' sufre la penalizacion de ' + base.name + ': -' + loss + ' HP.');
     if (base.fleeStealsCard) {
       var rivals = s.otherAlivePlayers(game, player.id);
       if (rivals.length > 0 && player.hand.length > 0) {
