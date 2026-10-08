@@ -18,25 +18,46 @@
       var row = document.createElement('div');
       row.className = 'player-form-row';
       row.innerHTML =
+        '<span class="class-portrait"></span>' +
         '<strong>P' + (i + 1) + '</strong>' +
         '<input type="text" class="name-input" placeholder="Nombre del jugador ' + (i + 1) + '">' +
         buildClassSelect() +
         '<div class="class-desc"></div>';
       var select = row.querySelector('.class-select');
       var desc = row.querySelector('.class-desc');
-      var updateDesc = function (sel, d) {
+      var portrait = row.querySelector('.class-portrait');
+      var updateDesc = function (sel, d, pic) {
         return function () {
           var cls = D.CLASSES[sel.value];
           d.textContent = cls.icon + ' ' + cls.summary + ' (' + cls.maxHp + ' HP) - ' + cls.drawback;
+          pic.innerHTML = global.VA_PIXEL.sprite(cls.icon, 'md');
         };
-      }(select, desc);
+      }(select, desc, portrait);
       select.addEventListener('change', updateDesc);
       updateDesc();
       wrap.appendChild(row);
     }
   }
 
+  /* Cambia los emoji del titulo por sprites pixel. */
+  function pixelateTitle() {
+    Array.prototype.forEach.call(document.querySelectorAll('.title-flourish'), function (n) {
+      n.innerHTML = global.VA_PIXEL.sprite(n.textContent.trim(), 'md');
+    });
+  }
+
+  /* Interferencia de "cambio de canal" en la tele al pasar de una pantalla a otra. */
+  function crtSwitch() {
+    var crt = document.getElementById('crt');
+    if (!crt) return;
+    crt.classList.remove('crt-switching');
+    void crt.offsetWidth;
+    crt.classList.add('crt-switching');
+    global.setTimeout(function () { crt.classList.remove('crt-switching'); }, 700);
+  }
+
   function initSetupScreen() {
+    pixelateTitle();
     var countSelect = document.getElementById('player-count');
     countSelect.innerHTML = '';
     for (var n = 2; n <= 6; n += 1) {
@@ -74,6 +95,7 @@
     var game = global.VA_STATE.createGame(defs);
     game.isTutorial = !!opts.tutorial;
     global.VA_UI.setGame(game);
+    crtSwitch();
     document.getElementById('setup-screen').hidden = true;
     document.getElementById('game-screen').hidden = false;
     global.VA_STATE.requestPassDevice(game);

@@ -8,6 +8,7 @@
   var SUIT_SYMBOL = { picas: '♠', treboles: '♣', corazones: '♥', diamantes: '♦' };
 
   var FX = global.VA_FX;
+  var PX = global.VA_PIXEL;
 
   var game = null;
   var ui = {
@@ -55,7 +56,7 @@
     var isRed = card.color === 'roja';
     var selected = opts.selectedMap && opts.selectedMap[card.id];
     var classes = 'card' + (isRed ? ' red' : '') + (selected ? ' selected' : '') + (opts.disabled ? ' disabled' : '');
-    var suit = SUIT_SYMBOL[card.suit];
+    var suit = PX.suitSvg(card.suit) || SUIT_SYMBOL[card.suit];
     var node = el(
       '<div class="' + classes + '" data-card-id="' + card.id + '">' +
         '<div class="corner corner-tl"><span>' + card.value + '</span><span>' + suit + '</span></div>' +
@@ -84,7 +85,7 @@
       var pct = hpPct(hp, p.maxHp);
       var chip = el(
         '<div class="player-chip' + (p.id === current.id ? ' current' : '') + (alive ? '' : ' dead') + '" data-player-id="' + p.id + '">' +
-          '<div class="pname"><span class="class-icon">' + D.CLASSES[p.classId].icon + '</span>' + escapeHtml(p.name) + (p.isAI ? ' <span class="ai-badge">IA</span>' : '') + '</div>' +
+          '<div class="pname"><span class="class-icon">' + PX.sprite(D.CLASSES[p.classId].icon, 'sm') + '</span>' + escapeHtml(p.name) + (p.isAI ? ' <span class="ai-badge">IA</span>' : '') + '</div>' +
           '<div class="pclass">' + D.CLASSES[p.classId].name + '</div>' +
           '<div class="hp-bar-outer">' +
             '<div class="hp-bar-ghost" style="width:' + pct + '%"></div>' +
@@ -190,7 +191,7 @@
     var panel = document.getElementById('coach-panel');
     if (!panel) return;
     panel.hidden = false;
-    panel.innerHTML = '<span class="coach-icon">&#128161;</span><span>' + escapeHtml(text) + '</span>';
+    panel.innerHTML = '<span class="coach-icon">' + PX.sprite('\uD83D\uDCA1', 'sm') + '</span><span>' + escapeHtml(text) + '</span>';
   }
 
   function clearCoach() {
@@ -391,7 +392,7 @@
       controls.appendChild(targetGroup);
 
       if (S.hasUsableLoot(game, player, 'daga') && player.hp > 4) {
-        var dagaWrap = el('<label style="font-size:0.78rem;color:var(--muted)"><input type="checkbox" id="use-daga-chk"> Usar Daga de Sacrificio (+15, -4 HP)</label>');
+        var dagaWrap = el('<label class="check-row"><input type="checkbox" id="use-daga-chk"> Usar Daga de Sacrificio (+15, -4 HP)</label>');
         controls.appendChild(dagaWrap);
         var chk = dagaWrap.querySelector('input');
         chk.checked = ui.useDaga;
@@ -545,7 +546,7 @@
     var pend = game.pending;
     var player = S.byId(game, pend.playerId);
     var wrap = overlayWrap(
-      '<h3><span class="monster-icon">' + D.MONSTERS[pend.monsterId].icon + '</span> Encuentro: ' + escapeHtml(pend.monsterName) + '</h3>' +
+      '<h3><span class="monster-icon">' + PX.sprite(D.MONSTERS[pend.monsterId].icon, 'md') + '</span> Encuentro: ' + escapeHtml(pend.monsterName) + '</h3>' +
       '<p>HP del monstruo: <strong>' + pend.hp + '</strong>' + (pend.cofreBoosted ? ' (+5 por Cofre Mimetico)' : '') + '</p>' +
       '<p class="hint">Referencia de dificultad: ' + pend.minLabel + '. La regla real es: dano total &gt;= HP del monstruo.</p>'
     );
@@ -590,7 +591,7 @@
     modal.appendChild(el('<p class="info">' + (preview && preview.valid ? preview.levelName + ' -> valor base ' + preview.baseValue : 'Selecciona al menos una carta de ataque.') + '</p>'));
 
     if (S.hasUsableLoot(game, player, 'daga') && player.hp > 4) {
-      var dagaWrap = el('<label style="font-size:0.78rem;color:var(--muted);display:block;margin-bottom:6px"><input type="checkbox"> Usar Daga de Sacrificio (+15, -4 HP)</label>');
+      var dagaWrap = el('<label class="check-row check-row-block"><input type="checkbox"> Usar Daga de Sacrificio (+15, -4 HP)</label>');
       var chk = dagaWrap.querySelector('input');
       chk.checked = ui.fightUseDaga;
       chk.addEventListener('change', function () { ui.fightUseDaga = chk.checked; });
@@ -940,7 +941,7 @@
   function showEventBanner(evt) {
     var e = D.EVENTS[evt.eventId];
     FX.banner(
-      '<span class="fx-banner-icon">' + e.icon + '</span>' +
+      '<span class="fx-banner-icon">' + PX.sprite(e.icon, 'sm') + '</span>' +
       '<span><strong>Suceso: ' + escapeHtml(e.name) + '</strong><small>' + escapeHtml(e.desc) + '</small></span>',
       'event', 3800
     );

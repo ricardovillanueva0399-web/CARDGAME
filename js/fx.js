@@ -243,7 +243,8 @@
   function monsterStage(icon, name, hp) {
     var st = spawn('fx-stage', 0, 0,
       '<div class="fx-stage-icon"></div><div class="fx-stage-name"></div><div class="fx-stage-label"></div>');
-    st.querySelector('.fx-stage-icon').textContent = icon;
+    if (global.VA_PIXEL) st.querySelector('.fx-stage-icon').innerHTML = global.VA_PIXEL.sprite(icon, 'lg');
+    else st.querySelector('.fx-stage-icon').textContent = icon;
     st.querySelector('.fx-stage-name').textContent = name + (hp ? ' · ' + hp + ' HP' : '');
     var iconEl = st.querySelector('.fx-stage-icon');
     var labelEl = st.querySelector('.fx-stage-label');

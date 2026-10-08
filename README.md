@@ -20,7 +20,8 @@ y abrir `http://localhost:8000/`.
 
 ```
 index.html          Punto de entrada
-style.css           Estilos (tema oscuro, responsive)
+style.css           Estilos (tema tele CRT + RPG pixel, responsive)
+fonts/              Fuentes pixel incluidas (Press Start 2P y VT323, licencia SIL OFL)
 js/data.js           Tablas estáticas: clases, monstruos, sucesos, botín, artefactos
 js/deck.js            Construcción y barajado del mazo personal de cada jugador
 js/hands.js           Evaluador de manos (Carta Suelta → Quinta)
@@ -32,10 +33,30 @@ js/state.js           Motor de turnos y estado de partida
 js/tutorial.js         Panel de referencia estático "Cómo jugar" (10 pasos)
 js/coach.js            Textos de pista contextuales del Modo Tutorial
 js/ai.js               IA que juega turnos completos en el Modo Tutorial
+js/pixel.js            Arte pixel: palos de la baraja y sprites generados desde los emoji
 js/fx.js               Efectos visuales (orbes, números flotantes, estallidos, carteles)
 js/ui.js              Renderizado e interacción con el DOM
 js/main.js            Pantalla de configuración y arranque
 ```
+
+## Estilo visual: tele CRT + RPG pixel
+
+- Todo se ve como un juego de rol de 16 bits en una tele de tubo: marco de plástico con
+  esquinas de pantalla redondeadas, líneas de barrido, viñeta, un leve parpadeo, una banda
+  clara que recorre la pantalla y una ligera aberración cromática en el texto. Al cargar,
+  la tele "se enciende" (línea blanca que se abre) y al empezar la partida hay un instante
+  de estática como al cambiar de canal. Esta capa (`#crt`) está encima de todo pero no
+  captura clics.
+- Interfaz en ventanas tipo RPG (azul con marco blanco y esquinas escalonadas, hechas con
+  sombras CSS), botones pixel con bisel y cursor ▶ parpadeante, barras de vida por
+  segmentos y fuentes pixel: *Press Start 2P* para títulos y números, *VT323* para el texto.
+  Las fuentes van en `fonts/` para que funcione también sin conexión.
+- Cartas pixel con los palos dibujados pixel a pixel (`js/pixel.js`).
+- Los iconos de clases, monstruos y sucesos se convierten en sprites: el emoji se dibuja
+  en un lienzo de 16–26 px, se reduce a pocos colores con contorno oscuro y se amplía sin
+  suavizado. Depende de que el sistema tenga emoji a color; si no, se muestra el emoji
+  normal. No es una curvatura real del tubo (CSS no puede deformar la página sin romper
+  los clics): la sensación de pantalla curva sale de la viñeta y las esquinas.
 
 ## Animaciones
 
