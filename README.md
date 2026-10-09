@@ -39,6 +39,8 @@ js/pixel.js            Arte pixel: palos de la baraja y sprites generados desde 
 js/fx.js               Efectos visuales (orbes, números flotantes, estallidos, carteles)
 js/ui.js              Renderizado e interacción con el DOM
 js/main.js            Pantalla de configuración y arranque
+manifest.webmanifest  Datos de la app instalable (nombre, íconos, horizontal)
+icons/                Íconos de la app (PNG)
 ```
 
 ## Compendio
@@ -75,6 +77,37 @@ la Tienda (en Botín), sin cerrar la decisión en curso.
   suavizado. Depende de que el sistema tenga emoji a color; si no, se muestra el emoji
   normal. No es una curvatura real del tubo (CSS no puede deformar la página sin romper
   los clics): la sensación de pantalla curva sale de la viñeta y las esquinas.
+
+## iPhone en horizontal
+
+Primer paso hacia una versión para iPhone en formato horizontal, todavía como web:
+
+- **Diseño horizontal para teléfono** (pantallas giradas de hasta 500 px de alto): la
+  partida entera cabe en una pantalla sin desplazar la página. Jugadores en una columna
+  a la izquierda (con 5–6 jugadores las fichas se compactan y, si no entran, la columna
+  se desliza sola para mostrar al jugador del turno), mano y controles al centro, registro
+  a la derecha. La mano va en una sola fila que se desliza de lado si hay muchas cartas.
+- **Ventanas**: los botones principales (Combatir/Huir, Confirmar, alimentar al gusano,
+  terminar de comprar, Siguiente…) quedan fijos al pie de la ventana; la tienda muestra
+  los artículos en dos columnas y la ventana del gusano pone el dibujo al costado.
+- **Muesca / isla dinámica**: `viewport-fit=cover` + `env(safe-area-inset-*)`, para que
+  nada quede debajo de la muesca ni de la barra de inicio.
+- **Táctil**: sin zoom por doble toque, sin el "hover pegado" de las cartas y sin que
+  Safari agrande el texto al girar el teléfono.
+- **Instalable (PWA)**: `manifest.webmanifest`, íconos en `icons/` y metas de Apple. En
+  el iPhone: Safari → Compartir → "Agregar a inicio". Abierta así, en vertical muestra
+  "Gira el teléfono" (en el navegador normal el vertical sigue funcionando).
+
+Límites conocidos (sin verificar en un iPhone real; probado con emulación de tamaños de
+iPhone en Chromium, no con el motor de Safari):
+
+- Hasta donde sé, Safari no deja que una página web bloquee la orientación, y es
+  probable que ignore `"orientation": "landscape"` del manifest; por eso el aviso de girar.
+- No hay modo sin conexión (service worker): la app instalada necesita internet para
+  abrir. Se dejó afuera a propósito para no servir versiones viejas tras cada despliegue.
+- Para una app nativa en el App Store, el camino previsto es envolver esta misma web con
+  Capacitor; compilarla requiere una Mac con Xcode y publicarla, una cuenta del Apple
+  Developer Program. En la app nativa la orientación sí se puede fijar en horizontal.
 
 ## Animaciones
 

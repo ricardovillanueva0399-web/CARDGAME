@@ -2,8 +2,16 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>The Volatile Arena</title>
+<meta name="theme-color" content="#07071a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Volatile Arena">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,6 +20,12 @@
   <div class="crt-roll"></div>
   <div class="crt-glass"></div>
   <div class="crt-power"></div>
+</div>
+
+<div id="rotate-hint" aria-live="polite">
+  <div class="rotate-phone" aria-hidden="true"></div>
+  <p>Gira el telefono</p>
+  <small>The Volatile Arena se juega en horizontal.</small>
 </div>
 
 <div id="app">

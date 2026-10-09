@@ -95,7 +95,7 @@
             '<div class="hp-bar-inner" style="width:' + pct + '%;background:var(--' + hpColor(pct) + ')"></div>' +
           '</div>' +
           '<div class="hp-text">' + hp + ' / ' + p.maxHp + ' HP</div>' +
-          '<div class="coin-text">' + shown.coins[p.id] + ' Monedas</div>' +
+          '<div class="coin-text">' + coinHtml(shown.coins[p.id]) + '</div>' +
           (p.artifacts.length ? '<div class="artifact-icons">' + p.artifacts.map(function (a) { return D.ARTIFACTS[a].name; }).join(', ') + '</div>' : '') +
           '</div>'
       );
@@ -111,6 +111,20 @@
       }
       bar.appendChild(chip);
     });
+    /* En un telefono en horizontal la columna de jugadores puede no entrar entera (5-6
+       jugadores): se desliza para que el jugador del turno quede siempre a la vista. */
+    if (bar.scrollHeight > bar.clientHeight + 1) {
+      var cur = bar.querySelector('.player-chip.current');
+      if (cur) {
+        var top = cur.getBoundingClientRect().top - bar.getBoundingClientRect().top + bar.scrollTop;
+        bar.scrollTop = Math.max(0, top - (bar.clientHeight - cur.offsetHeight) / 2);
+      }
+    }
+  }
+
+  /* "N Monedas"; la palabra va aparte para poder ocultarla donde falta espacio. */
+  function coinHtml(n) {
+    return n + '<span class="coin-label"> Monedas</span>';
   }
 
   function hpPct(hp, maxHp) { return Math.max(0, Math.min(100, Math.round((hp / maxHp) * 100))); }
@@ -520,6 +534,15 @@
     return b;
   }
 
+  /* Botones principales de una ventana, juntos en una fila. En telefonos en horizontal esa
+     fila queda fija al pie de la ventana (ver style.css), para no tener que buscarlos. */
+  function modalActions(modal, buttons) {
+    var row = el('<div class="modal-actions"></div>');
+    buttons.forEach(function (b) { row.appendChild(b); });
+    modal.appendChild(row);
+    return row;
+  }
+
   function overlayWrap(innerHtml) {
     return el('<div class="overlay' + (overlayEnter ? ' enter' : '') + '"><div class="modal">' + innerHtml + '</div></div>');
   }
@@ -537,7 +560,7 @@
       S.confirmPassDevice(game);
       renderAll();
     });
-    wrap.querySelector('.modal').appendChild(btn);
+    modalActions(wrap.querySelector('.modal'), [btn]);
     return wrap;
   }
 
@@ -549,7 +572,7 @@
     );
     var btn = el('<button class="btn btn-primary">Nueva partida</button>');
     btn.addEventListener('click', function () { location.reload(); });
-    wrap.querySelector('.modal').appendChild(btn);
+    modalActions(wrap.querySelector('.modal'), [btn]);
     return wrap;
   }
 
@@ -591,9 +614,7 @@
         if (!res.ok) alert(res.error);
         renderAll();
       });
-      modal.appendChild(fightBtn);
-      modal.appendChild(fleeBtn);
-      modal.appendChild(el('<div></div>')).appendChild(compendiumButton('monstruos'));
+      modalActions(modal, [fightBtn, fleeBtn, compendiumButton('monstruos')]);
       return wrap;
     }
 
@@ -635,8 +656,7 @@
       renderAll();
     });
     backBtn.addEventListener('click', function () { ui.fightMode = false; renderAll(); });
-    modal.appendChild(confirmBtn);
-    modal.appendChild(backBtn);
+    modalActions(modal, [confirmBtn, backBtn]);
     return wrap;
   }
 
@@ -649,6 +669,7 @@
       '<p>Turno de <strong>' + escapeHtml(player.name) + '</strong> &middot; ' + player.coins + ' Monedas &middot; Artefactos: ' + player.artifacts.length + '/' + D.MAX_ARTIFACTS + '</p>'
     );
     var modal = wrap.querySelector('.modal');
+    modal.classList.add('shop-modal');
 
     if (game.isTutorial && !player.isAI) {
       modal.appendChild(el('<p class="coach-line">' + escapeHtml(global.VA_COACH.shopHint()) + '</p>'));
@@ -710,7 +731,7 @@
       global.VA_SHOP.doneShopping(game, player.id);
       renderAll();
     });
-    modal.appendChild(doneBtn);
+    modalActions(modal, [doneBtn]);
     return wrap;
   }
 
@@ -736,7 +757,7 @@
         if (!res.ok) alert(res.error);
         renderAll();
       });
-      modal.appendChild(skipBtn);
+      modalActions(modal, [skipBtn]);
       return wrap;
     }
     var handDiv = el('<div id="hand-area" style="min-height:auto"></div>');
@@ -778,8 +799,7 @@
       global.VA_MONSTERS.resolveAzazelChoice(game, player.id, 'rare');
       renderAll();
     });
-    modal.appendChild(btn1);
-    modal.appendChild(btn2);
+    modalActions(modal, [btn1, btn2]);
     return wrap;
   }
 
@@ -791,8 +811,10 @@
     var player = S.byId(game, pend.playerId);
     var wrap = overlayWrap(
       '<h3>' + escapeHtml(w.name) + '</h3>' +
-      '<div class="wanderer-art">' + FX.wormSvg('beg', overlayEnter ? 'emerge' : '') + '</div>' +
-      '<div class="worm-speech">"¡Tengo tanta hambre...! Dame algo de comer... por favor..."</div>'
+      '<div class="wanderer-side">' +
+        '<div class="wanderer-art">' + FX.wormSvg('beg', overlayEnter ? 'emerge' : '') + '</div>' +
+        '<div class="worm-speech">"¡Tengo tanta hambre...! Dame algo de comer... por favor..."</div>' +
+      '</div>'
     );
     var modal = wrap.querySelector('.modal');
     modal.classList.add('wanderer-modal');
@@ -850,6 +872,7 @@
       modal.appendChild(el('<p class="info">Tu mano suma solo ' + W.sumValues(player.hand) + ': no te alcanza para alimentarlo.</p>'));
     }
 
+    var actionBtns = [];
     if (possible) {
       var feedBtn = el('<button class="btn btn-primary"' + (total >= w.feedNeed ? '' : ' disabled') + '>Darle de comer</button>');
       feedBtn.addEventListener('click', function () {
@@ -860,7 +883,7 @@
         ui.feedSelectedIds = {};
         renderAll();
       });
-      modal.appendChild(feedBtn);
+      actionBtns.push(feedBtn);
     }
     var refuseBtn = el('<button class="btn' + (possible ? '' : ' btn-primary') + '">' + (possible ? 'No darle nada' : 'No me alcanza: dejarlo ir') + '</button>');
     refuseBtn.addEventListener('click', function () {
@@ -868,7 +891,8 @@
       ui.feedSelectedIds = {};
       renderAll();
     });
-    modal.appendChild(refuseBtn);
+    actionBtns.push(refuseBtn);
+    modalActions(modal, actionBtns);
     return wrap;
   }
 
@@ -946,7 +970,7 @@
     var chip = chipEl(p.id);
     if (!chip) return;
     var coinText = chip.querySelector('.coin-text');
-    if (coinText) coinText.textContent = p.coins + ' Monedas';
+    if (coinText) coinText.innerHTML = coinHtml(p.coins);
     var rect = chip.getBoundingClientRect();
     var d = p.coins - before;
     FX.floatText(rect.left + rect.width / 2, rect.bottom - 12, (d > 0 ? '+' : '') + d + ' 🪙', 'coin');

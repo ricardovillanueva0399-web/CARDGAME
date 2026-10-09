@@ -126,6 +126,7 @@
     crtSwitch();
     document.getElementById('setup-screen').hidden = true;
     document.getElementById('game-screen').hidden = false;
+    document.body.classList.add('in-game');
     global.VA_STATE.requestPassDevice(game);
     global.VA_UI.renderAll();
   }
@@ -142,6 +143,10 @@
     ];
     startGame(defs, { tutorial: true });
   }
+
+  /* App agregada a la pantalla de inicio del iPhone (Safari la marca con navigator.standalone):
+     ahi el juego se muestra solo en horizontal, como lo haria la app nativa. */
+  if (global.navigator && global.navigator.standalone) document.documentElement.classList.add('standalone');
 
   document.addEventListener('DOMContentLoaded', initSetupScreen);
 })(window);

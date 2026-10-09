@@ -1382,3 +1382,241 @@ input[type=checkbox]:checked {
   .hp-bar-inner, .hp-bar-ghost { transition: none; }
 }
 @keyframes fx-fade-only { 0% { opacity: 0; } 15% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
+
+/* =====================================================================
+   iPhone y pantallas tactiles
+   ===================================================================== */
+
+/* Safari en iPhone agranda el texto al girar a horizontal si no se le indica lo contrario. */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { -webkit-tap-highlight-color: transparent; }
+/* Sin zoom por doble toque (que ademas retrasa cada toque) en lo que se pulsa. */
+button, select, input, .card, .cmp-tab, .tut-dot { touch-action: manipulation; }
+/* En pantallas tactiles el "hover" se queda pegado tras tocar: sin levantar cartas por hover. */
+@media (hover: none) {
+  .card:hover { transform: none; }
+  .card.selected, .card.selected:hover { transform: translateY(-10px); }
+}
+
+.modal-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 12px; margin-top: 14px; padding-bottom: 6px; }
+.modal-actions .btn { margin: 0; }
+.wanderer-modal .modal-actions { justify-content: center; }
+
+/* Aviso "gira el telefono": solo en la app agregada a la pantalla de inicio, en vertical. */
+#rotate-hint { display: none; }
+@media (orientation: portrait) and (max-width: 600px) {
+  html.standalone #rotate-hint {
+    position: fixed; inset: 0; z-index: 900;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+    padding: 24px; text-align: center; background: var(--bg);
+  }
+  html.standalone #app { visibility: hidden; }
+}
+@media (display-mode: standalone) and (orientation: portrait) and (max-width: 600px) {
+  #rotate-hint {
+    position: fixed; inset: 0; z-index: 900;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+    padding: 24px; text-align: center; background: var(--bg);
+  }
+  #app { visibility: hidden; }
+}
+#rotate-hint p { margin: 0; font-family: var(--font-pixel); font-size: 13px; line-height: 1.6; color: var(--accent); text-shadow: 0 3px 0 var(--ink); }
+#rotate-hint small { color: var(--muted); font-size: 20px; }
+.rotate-phone {
+  width: 44px; height: 76px; border: 4px solid var(--frame); background: var(--win-3);
+  box-shadow: 0 0 0 3px var(--ink), inset 0 -10px 0 var(--win-4);
+  animation: rotate-phone 2.4s steps(6, end) infinite;
+}
+@keyframes rotate-phone {
+  0%, 30% { transform: rotate(0deg); }
+  60%, 100% { transform: rotate(-90deg); }
+}
+
+/* =====================================================================
+   Telefono en horizontal (iPhone girado: 320-430 px de alto).
+   Todo el juego cabe en una pantalla, sin desplazar la pagina:
+   jugadores a la izquierda, mano y controles al centro, registro a la derecha.
+   Las muescas/isla del iPhone quedan a los lados: se respetan con safe-area.
+   ===================================================================== */
+@media (orientation: landscape) and (max-height: 500px) {
+  :root { --bezel: 5px; --screen-r: 14px; --join: 22px; }
+  html, body { overscroll-behavior: none; }
+  body { font-size: 18px; min-height: 0; }
+  #app {
+    max-width: none;
+    padding:
+      calc(var(--bezel) + 6px)
+      max(calc(var(--bezel) + 8px), env(safe-area-inset-right))
+      max(calc(var(--bezel) + 6px), env(safe-area-inset-bottom))
+      max(calc(var(--bezel) + 8px), env(safe-area-inset-left));
+  }
+
+  /* Titulo: una linea en la preparacion; durante la partida no ocupa lugar */
+  #top-bar { padding: 2px 0 4px; }
+  #top-bar h1 { font-size: 13px; }
+  #top-bar .subtitle, #top-bar::after, .title-flourish { display: none; }
+  body.in-game #top-bar { display: none; }
+
+  /* --- Preparacion --- */
+  #setup-screen { max-width: 980px; margin-top: 2px; padding: 12px 16px 14px; }
+  #setup-screen h2 { font-size: 12px; margin-bottom: 2px; }
+  #setup-screen h3 { font-size: 10px; }
+  .field-row { margin: 6px 0; gap: 10px; }
+  .field-note { font-size: 16px; }
+  #player-forms { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 10px 0; }
+  .player-form-row { padding: 6px 8px; gap: 8px; }
+  .class-desc { font-size: 15px; }
+  .class-portrait { width: 36px; height: 36px; }
+  #setup-screen .hint { font-size: 16px; margin-top: 6px; }
+  .divider { margin: 10px 0 8px; }
+
+  /* --- Partida: tres columnas a pantalla completa --- */
+  #game-screen.screen-game {
+    display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 12px;
+    max-width: none;
+    height: calc(100vh - 2 * (var(--bezel) + 6px));
+    height: calc(100dvh - (var(--bezel) + 6px) - max(calc(var(--bezel) + 6px), env(safe-area-inset-bottom)));
+  }
+  #game-screen.screen-game[hidden] { display: none; }
+
+  #players-bar {
+    flex-direction: column; flex-wrap: nowrap; justify-content: flex-start; align-items: stretch;
+    gap: 12px; margin: 0; padding: 4px 4px 6px; min-height: 0; overflow-y: auto;
+    scrollbar-width: none;
+  }
+  #players-bar::-webkit-scrollbar { display: none; }
+  .player-chip { min-width: 0; padding: 6px 8px 5px; }
+  .player-chip.current::before { display: none; }
+  .player-chip .class-icon { width: 28px; height: 28px; margin: 0 6px 2px 0; }
+  .player-chip .class-icon img.px-sprite { width: 22px; height: 22px; }
+  .player-chip .pname { font-size: 8px; line-height: 1.5; white-space: normal; overflow-wrap: anywhere; }
+  .player-chip .pclass { display: none; }
+  .player-chip .hp-bar-outer { height: 8px; margin-top: 5px; }
+  .player-chip .hp-text, .player-chip .coin-text { display: inline-block; font-size: 7px; margin-top: 7px; letter-spacing: 0; white-space: nowrap; }
+  .player-chip .coin-text { margin-left: 8px; }
+  .player-chip .coin-text::before { margin-right: 4px; }
+  .player-chip .coin-label { display: none; }
+  .player-chip .artifact-icons { font-size: 14px; max-width: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .yep-alert { top: -10px; right: -8px; }
+  /* Con 5 o 6 jugadores, fichas sin retrato para que entren todas */
+  #players-bar:has(> .player-chip:nth-child(5)) { gap: 8px; padding-top: 3px; }
+  #players-bar:has(> .player-chip:nth-child(5)) .player-chip { --u: 2px; padding: 3px 7px 3px; }
+  #players-bar:has(> .player-chip:nth-child(5)) .hp-bar-outer { margin-top: 3px; height: 7px; }
+  #players-bar:has(> .player-chip:nth-child(5)) .class-icon,
+  #players-bar:has(> .player-chip:nth-child(5)) .artifact-icons { display: none; }
+  #players-bar:has(> .player-chip:nth-child(5)) .pname { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-top: 0; }
+  #players-bar:has(> .player-chip:nth-child(5)) .hp-text,
+  #players-bar:has(> .player-chip:nth-child(5)) .coin-text { margin-top: 4px; }
+
+  #board { display: grid; grid-template-columns: minmax(0, 1fr) 190px; gap: 12px; min-height: 0; }
+  #action-panel { padding: 8px 10px 10px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+  #phase-banner { font-size: 8px; margin-bottom: 2px; }
+  #coach-panel { font-size: 16px; padding: 6px 26px 6px 8px; margin: 2px 0 6px; gap: 8px; }
+  .coach-icon { width: 30px; height: 30px; }
+  .coach-line { font-size: 16px; padding: 6px 26px 6px 8px; margin: 6px 0 8px; }
+
+  /* La mano en una sola fila (se desliza de lado si hay muchas cartas) */
+  #hand-area {
+    flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; gap: 8px;
+    margin: 0 0 4px; padding: 16px 6px 10px; min-height: 0;
+    scrollbar-width: none;
+  }
+  #hand-area::-webkit-scrollbar { display: none; }
+  .card { --u: 2px; --sp: 2px; width: 50px; height: 72px; flex-shrink: 0; gap: 4px; }
+  .card .val { font-size: 16px; }
+  .card .corner { display: none; }
+  .card .group-badge { top: -12px; }
+
+  #controls { gap: 10px 8px; }
+  #controls .group { gap: 10px 8px; }
+  #controls .info, .info { font-size: 16px; }
+  .btn { font-size: 17px; padding: 6px 12px 5px; }
+  .btn-small { font-size: 15px; padding: 5px 10px 4px; }
+  .hand-preview { gap: 6px; margin: 2px 0 4px; }
+  .preview-row { font-size: 16px; padding: 4px 8px 3px; }
+  #loot-bar { margin-top: 8px; padding-top: 8px; gap: 10px 8px; }
+
+  #side-panel { min-height: 0; gap: 8px; position: static; }
+  #log-panel { flex: 1 1 auto; height: auto; min-height: 0; max-height: none; font-size: 15px; padding: 6px 8px; }
+  #log-panel::before { font-size: 7px; top: -6px; margin: -6px 0 4px; padding: 6px 0 4px; }
+  .side-buttons { flex-wrap: nowrap; gap: 8px; }
+  .side-buttons .btn { flex: 1 1 0; padding: 5px 4px 4px; font-size: 14px; }
+
+  /* --- Ventanas: ocupan el alto disponible; los botones quedan fijos al pie --- */
+  .overlay {
+    padding:
+      calc(var(--bezel) + 6px)
+      max(calc(var(--bezel) + 10px), env(safe-area-inset-right))
+      max(calc(var(--bezel) + 6px), env(safe-area-inset-bottom))
+      max(calc(var(--bezel) + 10px), env(safe-area-inset-left));
+  }
+  /* Sin relleno inferior: asi la barra fija de botones queda pegada al borde en cualquier
+     navegador (Chrome y Safari no tratan igual el relleno de un contenedor con scroll). */
+  .modal { max-width: min(760px, 100%); max-height: 100%; padding: 12px 16px 0; font-size: 18px; }
+  .modal > :last-child:not(.modal-actions):not(.tut-nav) { margin-bottom: 12px; }
+  .modal h3 { font-size: 11px; margin-bottom: 6px; }
+  .modal h4 { font-size: 9px; margin: 10px 0 6px; }
+  .modal p { margin: 4px 0; }
+  .modal #hand-area { margin: 6px 0 4px; padding-top: 14px; }
+  .modal-actions, .tut-nav {
+    position: sticky; bottom: 0; z-index: 3;
+    margin-top: 8px; padding: 8px 0 12px;
+    background: var(--win-4);
+  }
+  .modal-actions .btn-small.cmp-link { margin-left: auto; }
+
+  /* Tienda: articulos en dos columnas */
+  .shop-modal { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 12px; align-content: start; }
+  .shop-modal > :not(.shop-item) { grid-column: 1 / -1; }
+  .shop-modal > .cmp-link { justify-self: start; }
+  .shop-item { font-size: 17px; padding: 5px 8px; margin: 0 2px 8px; }
+  .shop-item .desc { font-size: 15px; }
+
+  /* Gusano: dibujo a la izquierda, decision a la derecha */
+  .modal.wanderer-modal {
+    display: grid; grid-template-columns: 150px minmax(0, 1fr); column-gap: 16px; align-content: start;
+    text-align: left; max-width: 760px;
+  }
+  .wanderer-modal > * { grid-column: 2; }
+  .wanderer-modal > h3 { grid-column: 1 / -1; }
+  .wanderer-modal > .wanderer-side { grid-column: 1; grid-row: 2 / span 6; align-self: start; text-align: center; }
+  .wanderer-art .worm { width: 112px; }
+  .worm-speech { font-size: 15px; padding: 6px 8px; margin: 2px 0 0; }
+  .worm-speech::after { top: -8px; bottom: auto; border-top: 0; border-bottom: 8px solid #f6ead9; }
+  .wanderer-modal .wanderer-options { font-size: 15px; gap: 6px; margin: 0 0 4px; }
+  .wanderer-modal .wanderer-options div { padding: 5px 8px; }
+  .wanderer-modal #hand-area { justify-content: flex-start; }
+  .wanderer-modal .modal-actions { justify-content: flex-start; }
+  .feed-meter { margin: 4px 0 2px; max-width: none; }
+
+  /* Como jugar y Compendio */
+  .tut-modal { max-width: 760px; }
+  .tut-body { font-size: 17px; }
+  .tut-dots { margin: 8px 0 4px; }
+  .cmp-modal { height: 100%; max-width: 900px; padding-bottom: 8px; }
+  .cmp-header h3 { font-size: 12px; }
+  .cmp-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 8px 0 6px; padding-bottom: 8px; }
+  .cmp-tabs::-webkit-scrollbar { display: none; }
+  .cmp-tab { flex-shrink: 0; font-size: 16px; }
+  .cmp-body { font-size: 17px; }
+
+  /* Efectos centrales mas chicos: la pantalla es baja */
+  img.px-sprite.px-lg { width: 72px; height: 72px; }
+  .fx-stage { padding: 12px 22px 12px; min-width: 200px; }
+  .fx-stage.fx-stage-creature { top: 50% !important; }
+  .fx-stage-icon .worm { width: 104px; }
+  .fx-stage-label { font-size: 13px; margin-top: 6px; }
+  #fx-banners { top: calc(var(--bezel) + 6px); width: min(70vw, 520px); }
+}
+
+/* iPhone SE y similares (667 px de ancho): columnas laterales un poco mas angostas */
+@media (orientation: landscape) and (max-height: 500px) and (max-width: 700px) {
+  #game-screen.screen-game { grid-template-columns: 138px minmax(0, 1fr); gap: 8px; }
+  #board { grid-template-columns: minmax(0, 1fr) 150px; gap: 8px; }
+  #action-panel { padding: 6px 8px 8px; }
+  .card { width: 46px; height: 66px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rotate-phone { animation: none; transform: rotate(-90deg); }
+}
