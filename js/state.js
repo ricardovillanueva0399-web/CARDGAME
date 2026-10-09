@@ -224,7 +224,11 @@
       if (game.pending) return;
     }
     game.drawContext = null;
-    if (onComplete === 'action') beginActionPhase(game, player);
+    if (onComplete !== 'action') return;
+    /* Con la mano ya completa puede aparecer una criatura errante (ver wanderers.js);
+       en ese caso la fase de accion empieza cuando se resuelva su dilema. */
+    if (global.VA_WANDERERS && global.VA_WANDERERS.maybeSpawn(game, player)) return;
+    beginActionPhase(game, player);
   }
 
   function resumeDraw(game) {

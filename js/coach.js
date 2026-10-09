@@ -54,7 +54,20 @@
     return 'Elige tu recompensa: HP maximo permanente para siempre, o cartas de botin/artefactos al azar.';
   }
 
+  function wandererHint(canFeed, chosenTotal, need, coinsAtRisk, bite) {
+    var penalty = coinsAtRisk > 0 ? 'perder ' + coinsAtRisk + ' Monedas' : 'recibir una mordida (-' + bite + ' HP)';
+    if (!canFeed) {
+      return 'Tu mano no suma ' + need + ', asi que no puedes alimentarlo: pulsa "No me alcanza". Te tocara ' + penalty + '.';
+    }
+    if (chosenTotal === 0) {
+      return 'Decide: darle cartas que sumen ' + need + ' o mas (ya no podras jugarlas este turno) o negarte y ' + penalty + '. Si lo alimentas, conviene usar cartas sueltas que no formen pareja.';
+    }
+    if (chosenTotal < need) return 'Llevas ' + chosenTotal + ' de ' + need + '. Elige mas cartas.';
+    return 'Ya alcanza (' + chosenTotal + '). Pulsa "Darle de comer".';
+  }
+
   global.VA_COACH = {
+    wandererHint: wandererHint,
     actionHint: actionHint,
     endOfTurnHint: endOfTurnHint,
     monsterHint: monsterHint,

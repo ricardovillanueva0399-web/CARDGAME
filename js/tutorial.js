@@ -5,6 +5,10 @@
 
   var D = global.VA_DATA;
 
+  function stepBody(step) {
+    return typeof step.body === 'function' ? step.body() : step.body;
+  }
+
   var STEPS = [
     {
       title: 'Que es The Volatile Arena',
@@ -116,6 +120,27 @@
         '</ul>'
     },
     {
+      title: 'Criaturas errantes: el Gusano Suplicante',
+      /* Funcion: el dibujo vive en fx.js, que se carga despues de este archivo. */
+      body: function () {
+        var w = D.WANDERERS.gusano;
+        var art = global.VA_FX ? '<div class="wanderer-art">' + global.VA_FX.wormSvg('beg') + '</div>' : '';
+        return art +
+          '<p>No es una carta: a veces, al terminar de robar tu mano, sale de la tierra un ' +
+          'gusano con cara humana suplicando comida. No hay que matarlo; hay que decidir:</p>' +
+          '<ul>' +
+          '<li><strong>Alimentarlo:</strong> le das cartas de tu mano que sumen al menos ' + w.feedNeed +
+          '. Te cura <strong>+' + w.heal + ' HP</strong>; si tienes la vida casi llena, lo que ' +
+          'sobre se vuelve <strong>HP maximo permanente</strong> (hasta +' + w.maxHpBonusCap + ').</li>' +
+          '<li><strong>Negarte</strong> (o no poder): se enoja y se lleva el ' +
+          Math.round(w.coinsTakenPct * 100) + '% de tus Monedas. Si no tienes ninguna, te muerde ' +
+          '(-' + w.bite + ' HP, nunca te deja en 0).</li>' +
+          '</ul>' +
+          '<p>Las cartas que le des ya no las podras jugar este turno: ese es el precio.</p>' +
+          '<p class="hint">Esta criatura es un agregado propio, no esta en el Marco de Diseno v3.3.</p>';
+      }
+    },
+    {
       title: 'La Tienda de la Arena',
       body:
         '<p>Se abre para todos tras cualquier monstruo derrotado. Cada jugador compra por ' +
@@ -148,7 +173,7 @@
         '<p>Resumen de un turno:</p>' +
         '<ol>' +
         '<li>Pasa el dispositivo y robas hasta tener 5 cartas (resolviendo Sucesos y ' +
-        'Monstruos por el camino).</li>' +
+        'Monstruos por el camino). A veces aparece el Gusano Suplicante.</li>' +
         '<li>Juegas una mano (Ataque o Curacion) o pasas.</li>' +
         '<li>Descartas cartas sueltas por Monedas si quieres.</li>' +
         '<li>Le pasas el turno al siguiente jugador.</li>' +

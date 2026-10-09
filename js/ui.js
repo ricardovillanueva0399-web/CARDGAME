@@ -14,6 +14,7 @@
   var ui = {
     selectedCardIds: {}, declaredType: null, targetId: null, useDaga: false, error: '',
     fightSelectedIds: {}, fightUseDaga: false, fightMode: false,
+    feedSelectedIds: {},
     lastLinked: {}, lastComboKey: ''
   };
 
@@ -24,6 +25,7 @@
    */
   var shown = { hp: {}, alive: {}, coins: {} };
   var hpScheduled = {};
+  var coinScheduled = {};
   var fxOrigin = null;
   var fxChain = Promise.resolve();
   var fxPending = 0;
@@ -41,6 +43,7 @@
     ui.fightSelectedIds = {};
     ui.fightUseDaga = false;
     ui.fightMode = false;
+    ui.feedSelectedIds = {};
     ui.lastLinked = {};
     ui.lastComboKey = '';
   }
@@ -92,7 +95,7 @@
             '<div class="hp-bar-inner" style="width:' + pct + '%;background:var(--' + hpColor(pct) + ')"></div>' +
           '</div>' +
           '<div class="hp-text">' + hp + ' / ' + p.maxHp + ' HP</div>' +
-          '<div class="coin-text">' + p.coins + ' Monedas</div>' +
+          '<div class="coin-text">' + shown.coins[p.id] + ' Monedas</div>' +
           (p.artifacts.length ? '<div class="artifact-icons">' + p.artifacts.map(function (a) { return D.ARTIFACTS[a].name; }).join(', ') + '</div>' : '') +
           '</div>'
       );
@@ -506,6 +509,7 @@
       else if (game.pending.type === 'shop') root.appendChild(buildShopOverlay());
       else if (game.pending.type === 'mercado_negro') root.appendChild(buildMercadoOverlay());
       else if (game.pending.type === 'azazel_choice') root.appendChild(buildAzazelOverlay());
+      else if (game.pending.type === 'wanderer') root.appendChild(buildWandererOverlay());
     }
   }
 
@@ -779,6 +783,95 @@
     return wrap;
   }
 
+  /* Gusano Suplicante: alimentarlo con cartas de la mano o negarse. */
+  function buildWandererOverlay() {
+    var pend = game.pending;
+    var w = D.WANDERERS.gusano;
+    var W = global.VA_WANDERERS;
+    var player = S.byId(game, pend.playerId);
+    var wrap = overlayWrap(
+      '<h3>' + escapeHtml(w.name) + '</h3>' +
+      '<div class="wanderer-art">' + FX.wormSvg('beg', overlayEnter ? 'emerge' : '') + '</div>' +
+      '<div class="worm-speech">"¡Tengo tanta hambre...! Dame algo de comer... por favor..."</div>'
+    );
+    var modal = wrap.querySelector('.modal');
+    modal.classList.add('wanderer-modal');
+
+    if (player.isAI) {
+      modal.appendChild(el('<p class="info">' + escapeHtml(player.name) + ' (IA) esta decidiendo si lo alimenta...</p>'));
+      return wrap;
+    }
+
+    var room = player.maxHp - player.hp;
+    var takes = Math.ceil(player.coins * w.coinsTakenPct);
+    var bite = Math.max(0, Math.min(w.bite, player.hp - 1));
+    var refuseText = takes > 0
+      ? 'Se enoja y se lleva <strong class="bad">' + takes + ' de tus ' + player.coins + ' Monedas</strong>.'
+      : 'No tienes monedas, asi que te muerde: <strong class="bad">-' + bite + ' HP</strong> (nunca te deja en 0).';
+    var feedText = room >= w.heal
+      ? 'te cura <strong class="good">+' + w.heal + ' HP</strong>'
+      : (room > 0
+        ? 'te cura <strong class="good">+' + room + ' HP</strong> y lo que sobra se vuelve <strong class="good">+' + Math.min(w.heal - room, w.maxHpBonusCap) + ' HP maximo</strong> para siempre'
+        : 'ya tienes la vida llena: te da <strong class="good">+' + w.maxHpBonusCap + ' HP maximo</strong> para siempre');
+    modal.appendChild(el(
+      '<div class="wanderer-options">' +
+        '<div>🍖 <strong>Alimentarlo:</strong> dale cartas de tu mano que sumen al menos ' + w.feedNeed + '; ' + feedText + '.</div>' +
+        '<div>✋ <strong>Negarte</strong> (o si no te alcanza): ' + refuseText + '</div>' +
+      '</div>'
+    ));
+
+    var selected = player.hand.filter(function (c) { return ui.feedSelectedIds[c.id]; });
+    var total = W.sumValues(selected);
+    var possible = W.canFeed(player);
+
+    if (game.isTutorial) {
+      modal.appendChild(el('<p class="coach-line">' + escapeHtml(global.VA_COACH.wandererHint(possible, total, w.feedNeed, takes, bite)) + '</p>'));
+    }
+
+    if (possible) {
+      var handDiv = el('<div id="hand-area" style="min-height:auto"></div>');
+      player.hand.forEach(function (card) {
+        var node = cardNode(card, { selectedMap: ui.feedSelectedIds });
+        node.addEventListener('click', function () {
+          if (ui.feedSelectedIds[card.id]) delete ui.feedSelectedIds[card.id];
+          else ui.feedSelectedIds[card.id] = true;
+          renderAll();
+        });
+        handDiv.appendChild(node);
+      });
+      modal.appendChild(handDiv);
+      var pct = Math.min(100, Math.round((total / w.feedNeed) * 100));
+      modal.appendChild(el(
+        '<div class="feed-meter' + (total >= w.feedNeed ? ' full' : '') + '"><div style="width:' + pct + '%"></div></div>'
+      ));
+      modal.appendChild(el('<p class="info">Comida elegida: <strong>' + total + ' / ' + w.feedNeed + '</strong>' +
+        (total >= w.feedNeed ? ' — ¡suficiente!' : '') + '</p>'));
+    } else {
+      modal.appendChild(el('<p class="info">Tu mano suma solo ' + W.sumValues(player.hand) + ': no te alcanza para alimentarlo.</p>'));
+    }
+
+    if (possible) {
+      var feedBtn = el('<button class="btn btn-primary"' + (total >= w.feedNeed ? '' : ' disabled') + '>Darle de comer</button>');
+      feedBtn.addEventListener('click', function () {
+        var snaps = snapshotCards('#overlay-root .card.selected');
+        var res = W.feed(game, player.id, Object.keys(ui.feedSelectedIds));
+        if (!res.ok) { alert(res.error); return; }
+        fxOrigin = FX.mergeCards(snaps, 'heal');
+        ui.feedSelectedIds = {};
+        renderAll();
+      });
+      modal.appendChild(feedBtn);
+    }
+    var refuseBtn = el('<button class="btn' + (possible ? '' : ' btn-primary') + '">' + (possible ? 'No darle nada' : 'No me alcanza: dejarlo ir') + '</button>');
+    refuseBtn.addEventListener('click', function () {
+      W.refuse(game, player.id);
+      ui.feedSelectedIds = {};
+      renderAll();
+    });
+    modal.appendChild(refuseBtn);
+    return wrap;
+  }
+
   /* ---------------- Animaciones ---------------- */
 
   function snapshotCards(selector) {
@@ -846,11 +939,14 @@
   }
 
   function applyCoins(p) {
+    coinScheduled[p.id] = false;
     var before = shown.coins[p.id];
     if (before === undefined || before === p.coins) return;
     shown.coins[p.id] = p.coins;
     var chip = chipEl(p.id);
     if (!chip) return;
+    var coinText = chip.querySelector('.coin-text');
+    if (coinText) coinText.textContent = p.coins + ' Monedas';
     var rect = chip.getBoundingClientRect();
     var d = p.coins - before;
     FX.floatText(rect.left + rect.width / 2, rect.bottom - 12, (d > 0 ? '+' : '') + d + ' 🪙', 'coin');
@@ -948,10 +1044,76 @@
     }).then(function () { stage.remove(); });
   }
 
+  /* --- Gusano Suplicante --- */
+
+  function playWandererAppear() {
+    var w = D.WANDERERS.gusano;
+    FX.shake(document.getElementById('board'), true);
+    FX.banner(
+      '<span class="fx-banner-icon">🪱</span>' +
+      '<span><strong>¡' + escapeHtml(w.name) + '!</strong><small>Algo sale de la tierra retorciendose... y pide comida.</small></span>',
+      'event', 3000
+    );
+    return FX.wait(300);
+  }
+
+  function playWandererFed(evt, origin) {
+    var w = D.WANDERERS.gusano;
+    var stage = FX.monsterStage(FX.wormSvg('beg'), w.name);
+    return FX.wait(350).then(function () {
+      return resolveOrigin(origin, evt.playerId);
+    }).then(function (from) {
+      return FX.projectile(from, stage.center(), 'heal', 480);
+    }).then(function () {
+      var c = stage.center();
+      stage.mood('happy');
+      stage.label('¡Ñam! ¡Gracias!', 'gold');
+      FX.sparkles(c.x, c.y);
+      return FX.wait(650);
+    }).then(function () {
+      if (!evt.healed && !evt.bonus) return null;
+      return FX.projectile(stage.center(), chipCenter(evt.playerId), 'heal', 460).then(function () {
+        applyHp(evt.playerId);
+        if (evt.bonus > 0) {
+          var to = chipCenter(evt.playerId);
+          if (to) FX.floatText(to.x, to.y + 26, '+' + evt.bonus + ' HP max', 'gold', 280);
+        }
+      });
+    }).then(function () {
+      return FX.wait(650);
+    }).then(function () { stage.remove(); });
+  }
+
+  function playWandererAngry(evt) {
+    var w = D.WANDERERS.gusano;
+    var p = S.byId(game, evt.playerId);
+    var stage = FX.monsterStage(FX.wormSvg('angry'), w.name);
+    stage.label('¡GRRR!', 'dmg');
+    return FX.wait(500).then(function () {
+      if (evt.coinsTaken > 0) {
+        return FX.coins(chipCenter(evt.playerId), stage.center(), Math.ceil(evt.coinsTaken / 2)).then(function () {
+          applyCoins(p);
+          stage.label('Se lleva ' + evt.coinsTaken + ' 🪙', 'dmg');
+        });
+      }
+      stage.lunge();
+      return FX.wait(220).then(function () {
+        var to = chipCenter(evt.playerId);
+        if (to) FX.burst(to.x, to.y, 'attack', 12);
+        applyHp(evt.playerId);
+        stage.label('¡Te muerde!', 'dmg');
+        if (game.isTutorial && p && !p.isAI) FX.vignette('dmg');
+      });
+    }).then(function () {
+      return FX.wait(900);
+    }).then(function () { stage.remove(); });
+  }
+
   /* Version instantanea: si las jugadas llegan mas rapido de lo que duran las animaciones,
      se aplican los resultados sin orbes ni esperas para que la pantalla no se quede atras. */
   function playEventFast(evt) {
     claimsOf(evt).forEach(function (pid) { if (hpScheduled[pid]) applyHp(pid); });
+    if (evt.type === 'wanderer_angry' && coinScheduled[evt.playerId]) applyCoins(S.byId(game, evt.playerId));
     if (evt.type === 'death') {
       var dead = S.byId(game, evt.playerId);
       FX.banner('💀 <strong>' + escapeHtml(dead.name) + '</strong> ha sido eliminado', 'dmg');
@@ -978,6 +1140,9 @@
       case 'heal': return playHeal(evt, origin);
       case 'monster_fight': return playMonsterFight(evt, origin);
       case 'monster_flee': return playMonsterFlee(evt);
+      case 'wanderer_appear': return playWandererAppear(evt);
+      case 'wanderer_fed': return playWandererFed(evt, origin);
+      case 'wanderer_angry': return playWandererAngry(evt);
       case 'death':
         if (hpScheduled[evt.playerId]) applyHp(evt.playerId);
         FX.banner('💀 <strong>' + escapeHtml(p.name) + '</strong> ha sido eliminado', 'dmg');
@@ -1014,17 +1179,18 @@
 
     queue.forEach(function (evt) {
       claimsOf(evt).forEach(function (pid) { hpScheduled[pid] = true; });
+      if (evt.type === 'wanderer_angry' && evt.coinsTaken > 0) coinScheduled[evt.playerId] = true;
     });
 
     game.players.forEach(function (p) {
       if (!(p.id in shown.hp)) return;
       if (!hpScheduled[p.id] && (shown.hp[p.id] !== p.hp || shown.alive[p.id] !== p.alive)) applyHp(p.id);
-      applyCoins(p);
+      if (!coinScheduled[p.id]) applyCoins(p);
     });
 
     queue.forEach(function (evt) {
       var evtOrigin = null;
-      if (origin && (evt.type === 'attack' || evt.type === 'heal' || evt.type === 'monster_fight')) {
+      if (origin && (evt.type === 'attack' || evt.type === 'heal' || evt.type === 'monster_fight' || evt.type === 'wanderer_fed')) {
         evtOrigin = origin;
         origin = null;
       }
@@ -1034,6 +1200,7 @@
         .catch(function () { return null; })
         .then(function () {
           claimsOf(evt).forEach(function (pid) { if (hpScheduled[pid]) applyHp(pid); });
+          if (evt.type === 'wanderer_angry' && coinScheduled[evt.playerId]) applyCoins(S.byId(game, evt.playerId));
           fxDone();
         });
     });

@@ -29,8 +29,9 @@ js/combat.js          Orden de resolución de daño/curación
 js/events.js          Efectos de las 6 cartas de Suceso
 js/monsters.js        Encuentros con los 3 Monstruos de Emboscada
 js/shop.js            Tienda de la Arena
+js/wanderers.js       Criaturas errantes (Gusano Suplicante)
 js/state.js           Motor de turnos y estado de partida
-js/tutorial.js         Panel de referencia estático "Cómo jugar" (10 pasos)
+js/tutorial.js         Panel de referencia estático "Cómo jugar" (11 pasos)
 js/compendium.js       Compendio: referencia de clases, monstruos, manos, sucesos, botín, artefactos y reglas
 js/coach.js            Textos de pista contextuales del Modo Tutorial
 js/ai.js               IA que juega turnos completos en el Modo Tutorial
@@ -91,6 +92,26 @@ la Tienda (en Botín), sin cerrar la decisión en curso.
   rápido que las animaciones, las pendientes se aplican al instante para no atrasarse.
 - Con "reducir movimiento" activado en el sistema operativo, los avisos se mantienen
   pero sin desplazamientos ni sacudidas.
+
+## Criaturas errantes: el Gusano Suplicante
+
+**Agregado propio, no está en el Marco de Diseño v3.3.** Un enemigo que no se combate:
+plantea un dilema.
+
+- **Cuándo aparece:** no es una carta. Al terminar de robar la mano de inicio de turno
+  hay un 8% de probabilidad de que salga de la tierra (nunca durante la primera vuelta
+  de la mesa, ni en los robos extra de Transfusión Prohibida).
+- **Alimentarlo:** el jugador elige cartas de su mano cuyos valores sumen al menos 8;
+  esas cartas se descartan. Cura +20 HP; la curación que no quepa (por tener la vida
+  casi llena) se convierte en HP máximo permanente, hasta +10 por encuentro. Es una
+  curación fija: no la modifican pasivas de clase como la del Taumaturgo.
+- **Negarse, o no poder alimentarlo:** se enoja y se lleva el 80% de las monedas
+  (redondeando hacia arriba). Si el jugador no tiene ninguna, le muerde: −6 HP, sin
+  bajar nunca de 1 HP (el gusano no elimina a nadie).
+- La IA lo alimenta siempre que puede, con la combinación de cartas de menor valor que
+  alcance y prefiriendo no romper parejas; si no le alcanza, se niega.
+- Todos los números están en `WANDERERS.gusano` dentro de `js/data.js`, para poder
+  ajustar el balance sin tocar la lógica.
 
 ## Modo Tutorial (jugar contra la IA)
 

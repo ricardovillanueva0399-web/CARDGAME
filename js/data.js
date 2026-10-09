@@ -159,6 +159,24 @@
     capa: { id: 'capa', name: 'Capa del Fenix', icon: '🔥', price: 10, desc: 'Una vez por partida: al llegar a 0 HP, revives con 12 HP.' }
   };
 
+  /*
+   * Criaturas errantes: no son cartas. Aparecen "de la nada" al empezar un turno, con la
+   * mano ya completa, y plantean un dilema en vez de un combate. (Extension propia, no
+   * esta en el Marco de Diseno v3.3.)
+   */
+  var WANDERERS = {
+    gusano: {
+      id: 'gusano',
+      name: 'Gusano Suplicante',
+      chance: 0.08,          /* probabilidad por turno */
+      feedNeed: 8,           /* suma minima de valores de cartas para alimentarlo */
+      heal: 20,              /* curacion al alimentarlo */
+      maxHpBonusCap: 10,     /* la curacion que sobra se vuelve HP maximo, hasta este tope */
+      coinsTakenPct: 0.8,    /* si se enoja: se lleva este % de tus monedas (redondeo hacia arriba) */
+      bite: 6                /* si se enoja y no tienes monedas: mordida (nunca te deja en 0) */
+    }
+  };
+
   var MAX_ARTIFACTS = 3;
   var HAND_SIZE = 5;
 
@@ -203,6 +221,7 @@
     EVENTS: EVENTS,
     LOOT: LOOT,
     ARTIFACTS: ARTIFACTS,
+    WANDERERS: WANDERERS,
     MAX_ARTIFACTS: MAX_ARTIFACTS,
     HAND_SIZE: HAND_SIZE,
     DURATIONS: DURATIONS,

@@ -9,6 +9,7 @@
   function MONSTERS() { return global.VA_MONSTERS; }
   function SHOP() { return global.VA_SHOP; }
   function EVENTS() { return global.VA_EVENTS; }
+  function WANDERERS() { return global.VA_WANDERERS; }
 
   /* El grupo de cartas del mismo valor mas grande (Duo/Tercia/Poker/Quinta); si no hay
      ninguna pareja, la carta suelta de mayor valor. Heuristica simple, no busca Full
@@ -37,6 +38,7 @@
       if (p.type === 'shop') return s.byId(game, SHOP().currentShopper(game));
       if (p.type === 'mercado_negro') return s.byId(game, p.order[p.cursor]);
       if (p.type === 'azazel_choice') return s.byId(game, p.playerId);
+      if (p.type === 'wanderer') return s.byId(game, p.playerId);
       return null;
     }
     if (game.phase === 'action' || game.phase === 'end_of_turn') return s.currentPlayer(game);
@@ -172,6 +174,15 @@
     MONSTERS().resolveAzazelChoice(game, actor.id, 'maxhp');
   }
 
+  /* Gusano Suplicante: lo alimenta siempre que pueda, con la comida mas barata (prefiere
+     cartas sueltas para no romper sus parejas). Si no le alcanza, se niega. */
+  function decideWanderer(game, actor) {
+    var w = WANDERERS();
+    var meal = w.cheapestMeal(actor);
+    if (meal) w.feed(game, actor.id, ids(meal));
+    else w.refuse(game, actor.id);
+  }
+
   function performAction(game, actor) {
     if (game.pending) {
       var p = game.pending;
@@ -179,6 +190,7 @@
       if (p.type === 'shop') return decideShop(game, actor);
       if (p.type === 'mercado_negro') return decideMercado(game, actor);
       if (p.type === 'azazel_choice') return decideAzazel(game, actor);
+      if (p.type === 'wanderer') return decideWanderer(game, actor);
       return;
     }
     if (game.phase === 'action') return decideAction(game, actor);
@@ -209,12 +221,14 @@
     var actor = resolveActor(game);
     if (!actor || !actor.isAI) return;
 
+    /* Un poco mas de pausa ante el gusano, para que se le vea salir de la tierra. */
+    var delay = game.pending && game.pending.type === 'wanderer' ? 2000 : 900;
     game._aiTickScheduled = true;
     global.setTimeout(function () {
       game._aiTickScheduled = false;
       performAction(game, actor);
       rerender();
-    }, 900);
+    }, delay);
   }
 
   global.VA_AI = { tick: tick };

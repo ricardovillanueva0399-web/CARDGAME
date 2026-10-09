@@ -1052,6 +1052,7 @@ input[type=checkbox]:checked {
 .fx-float.fx-dmg { color: #ff5a4e; font-size: 26px; }
 .fx-float.fx-heal { color: #7dff95; }
 .fx-float.fx-coin { color: var(--coin); font-size: 13px; }
+.fx-float.fx-gold { color: #ffd36b; font-size: 14px; }
 .fx-float.fx-skull { font-family: inherit; font-size: 2.2rem; text-shadow: none; }
 @keyframes fx-rise {
   0% { opacity: 0; transform: translate(-50%, -30%) scale(0.6); }
@@ -1244,6 +1245,121 @@ input[type=checkbox]:checked {
   to { opacity: 1; clip-path: inset(-16px); }
 }
 
+/* --- Gusano Suplicante (criatura errante) --- */
+.modal.wanderer-modal { text-align: center; border-color: #c97b84; max-width: 560px; }
+.wanderer-modal h3 { color: #f0a6ae; }
+.wanderer-art { display: flex; justify-content: center; margin: -6px 0 2px; }
+.wanderer-art .worm { width: 150px; height: auto; overflow: visible; }
+.worm-speech {
+  position: relative; display: inline-block; margin: 0 auto 10px; padding: 8px 14px;
+  background: #f6ead9; color: #3b2420; border-radius: 14px; font-weight: 700; font-style: italic; font-size: 0.9rem;
+}
+.worm-speech::after {
+  content: ''; position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%);
+  border: 8px solid transparent; border-top-color: #f6ead9; border-bottom: 0;
+}
+.wanderer-modal .wanderer-options { display: grid; gap: 6px; text-align: left; font-size: 0.82rem; margin: 6px 0 10px; }
+.wanderer-modal .wanderer-options div { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; }
+.wanderer-modal .wanderer-options strong.good { color: var(--hp-full); }
+.wanderer-modal .wanderer-options strong.bad { color: var(--hp-low); }
+.wanderer-modal #hand-area { justify-content: center; }
+.feed-meter { height: 10px; border-radius: 6px; background: var(--panel-2); border: 1px solid var(--border); overflow: hidden; margin: 6px 0 4px; }
+.feed-meter > div { height: 100%; background: linear-gradient(90deg, #c97b84, #ffd36b); transition: width 0.25s ease; }
+.feed-meter.full > div { background: linear-gradient(90deg, #4caf50, #b9f6c0); }
+.fx-stage-icon .worm { width: 190px; height: auto; overflow: visible; }
+/* El gusano es mas alto que un emoji: se baja para no tapar las fichas de los jugadores. */
+.fx-stage.fx-stage-creature { top: 58% !important; }
+.fx-stage-icon.fx-stage-lunge { animation: worm-lunge 0.5s ease-in-out; }
+.fx-coin-fly { position: absolute; left: 0; top: 0; font-size: 1.7rem; will-change: transform; filter: drop-shadow(0 0 6px rgba(255,200,60,0.85)); }
+
+.worm .w-body { stroke: #d98c8f; transition: stroke 0.3s; }
+.worm .w-rings { stroke: #a8585f; opacity: 0.45; }
+.worm .w-sheen { stroke: #f6c9c6; opacity: 0.5; }
+.worm .w-skin { fill: #eeb4a2; stroke: #a56a5e; stroke-width: 1.5; transition: fill 0.3s; }
+.worm .w-limb { stroke: #e3a796; }
+.worm .w-finger { stroke: #a56a5e; }
+.worm .w-hair { stroke: #3d2f2b; }
+.worm .w-wrinkle { stroke: #b07a6c; opacity: 0.6; }
+.worm .w-eye { fill: #fbf6ef; stroke: #6b4a40; stroke-width: 1; }
+.worm .w-pupil { fill: #2a1d1a; transform-box: fill-box; transform-origin: center; transition: transform 0.2s, fill 0.2s; }
+.worm .w-glint { fill: #fff; }
+.worm .w-eyes-happy { stroke: #3a2622; }
+.worm .w-brow { stroke: #4a3530; }
+.worm .w-nose { stroke: #b47565; }
+.worm .w-blush { fill: #ff8fa0; opacity: 0.45; }
+.worm .w-mouth { fill: #4a1c22; }
+.worm .w-tongue { fill: #e46a7a; }
+.worm .w-teeth { fill: #f8f1e6; }
+.worm .w-tear { fill: #8fd3ff; opacity: 0.9; }
+.worm .w-mound { fill: #4a3426; }
+.worm .w-mound-top { fill: #241810; }
+.worm .w-dirt circle { fill: #6a4c36; }
+.worm .w-hearts path { fill: #ff6b8a; }
+.worm .w-steam circle { fill: #f1ece6; opacity: 0.85; }
+.worm .w-vein { stroke: #c0182a; }
+
+/* Una sola ilustracion, tres expresiones */
+.worm .w-only-beg, .worm .w-only-happy, .worm .w-only-angry,
+.worm .w-eyes-happy, .worm .w-tear, .worm .w-hearts, .worm .w-steam { display: none; }
+.worm.beg .w-only-beg, .worm.beg .w-tear { display: inline; }
+.worm.happy .w-only-happy, .worm.happy .w-eyes-happy, .worm.happy .w-hearts { display: inline; }
+.worm.happy .w-eyes-open, .worm.happy .w-wrinkle { display: none; }
+.worm.angry .w-only-angry, .worm.angry .w-steam { display: inline; }
+.worm.angry .w-skin { fill: #ef8f7c; }
+.worm.angry .w-body { stroke: #d2706f; }
+.worm.angry .w-eye { fill: #ffe0d8; }
+.worm.angry .w-pupil { fill: #9b1020; transform: scale(0.6); }
+
+/* Movimiento: se retuerce siempre; suplica con los bracitos, llora, salta de alegria o tiembla de rabia */
+.worm .w-upper { transform-origin: 100px 214px; animation: worm-writhe 2.2s ease-in-out infinite; }
+.worm .w-arm-l { transform-origin: 86px 128px; }
+.worm .w-arm-r { transform-origin: 114px 128px; }
+.worm.beg .w-arm-l { animation: worm-grab-l 0.7s ease-in-out infinite alternate; }
+.worm.beg .w-arm-r { animation: worm-grab-r 0.7s ease-in-out 0.35s infinite alternate; }
+.worm.beg .w-head { transform-origin: 100px 112px; animation: worm-sob 0.55s ease-in-out infinite; }
+.worm.beg .w-tear-l { animation: worm-tear 1.3s ease-in infinite; }
+.worm.beg .w-tear-r { animation: worm-tear 1.3s ease-in 0.65s infinite; }
+.worm.happy .w-upper { animation: worm-happy 0.6s ease-in-out infinite; }
+.worm.happy .w-arm-l { animation: worm-wave-l 0.4s ease-in-out infinite alternate; }
+.worm.happy .w-arm-r { animation: worm-wave-r 0.4s ease-in-out 0.2s infinite alternate; }
+.worm.happy .w-hearts path { transform-box: fill-box; transform-origin: center; animation: worm-heart 1.4s ease-out infinite; }
+.worm.happy .w-hearts path:nth-child(2) { animation-delay: 0.6s; }
+.worm.angry .w-upper { animation: worm-rage 0.16s linear infinite; }
+.worm.angry .w-arm-l { animation: worm-fist-l 0.22s ease-in-out infinite alternate; }
+.worm.angry .w-arm-r { animation: worm-fist-r 0.22s ease-in-out 0.11s infinite alternate; }
+.worm.angry .w-steam circle { transform-box: fill-box; transform-origin: center; animation: worm-steam 0.9s ease-out infinite; }
+.worm.angry .w-steam circle:nth-child(2n) { animation-delay: 0.45s; }
+.worm.emerge .w-rise { animation: worm-emerge 1.1s cubic-bezier(.25,.9,.35,1.15) both; }
+
+@keyframes worm-writhe { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+@keyframes worm-grab-l { from { transform: rotate(14deg); } to { transform: rotate(-28deg); } }
+@keyframes worm-grab-r { from { transform: rotate(-14deg); } to { transform: rotate(28deg); } }
+@keyframes worm-sob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(1.6px) rotate(-1deg); } }
+@keyframes worm-tear { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: 0.95; } 100% { transform: translateY(30px); opacity: 0; } }
+@keyframes worm-happy { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-9px) rotate(3deg); } }
+@keyframes worm-wave-l { from { transform: rotate(-20deg); } to { transform: rotate(-55deg); } }
+@keyframes worm-wave-r { from { transform: rotate(20deg); } to { transform: rotate(55deg); } }
+@keyframes worm-heart {
+  0% { transform: translateY(10px) scale(0.5); opacity: 0; }
+  30% { opacity: 1; }
+  100% { transform: translateY(-22px) scale(1.1); opacity: 0; }
+}
+@keyframes worm-rage { 0%, 100% { transform: translate(-2px, 0) rotate(-1.5deg); } 50% { transform: translate(2px, -1px) rotate(1.5deg); } }
+@keyframes worm-fist-l { from { transform: rotate(-10deg); } to { transform: rotate(-48deg); } }
+@keyframes worm-fist-r { from { transform: rotate(10deg); } to { transform: rotate(48deg); } }
+@keyframes worm-steam { 0% { transform: translateY(6px) scale(0.4); opacity: 0; } 40% { opacity: 0.9; } 100% { transform: translateY(-14px) scale(1.3); opacity: 0; } }
+@keyframes worm-emerge {
+  0% { transform: translateY(175px); }
+  55% { transform: translateY(-8px); }
+  75% { transform: translateY(4px); }
+  100% { transform: translateY(0); }
+}
+@keyframes worm-lunge {
+  0%, 100% { transform: scale(1) translateY(0); }
+  40% { transform: scale(1.35) translateY(-24px); }
+  60% { transform: scale(1.3) translateY(-18px); }
+}
+
 /* Quien pidio reducir movimiento en su sistema ve los mismos avisos, pero sin desplazamientos
    ni parpadeos de la tele. */
 @media (prefers-reduced-motion: reduce) {
@@ -1257,6 +1373,7 @@ input[type=checkbox]:checked {
   #phase-banner:not(:empty)::before, #log-list div:last-child::after,
   #coach-panel::after, .coach-line::after { animation: none; }
   .fx-stage-label.show { animation: none; opacity: 1; }
+  .worm *, .fx-stage-icon.fx-stage-lunge { animation: none !important; }
   .fx-float, .fx-combo { animation: fx-fade-only 1.2s ease-out forwards; }
   .fx-banner { animation-name: fx-fade-only; }
   .hp-bar-inner, .hp-bar-ghost { transition: none; }
