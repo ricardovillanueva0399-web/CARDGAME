@@ -33,6 +33,22 @@
     return true;
   }
 
+  /* Numeros del gusano para una duracion de partida: la curacion, el tope de HP maximo y la
+     mordida crecen con la vida de las clases (x1.5 en Normal, x2 en Larga), para que pesen lo
+     mismo en proporcion. Las monedas y la comida necesaria no cambian. */
+  function stats(durationId) {
+    var w = D.WANDERERS.gusano;
+    var mult = D.durationOf ? D.durationOf(durationId).hpMult : 1;
+    return {
+      name: w.name,
+      feedNeed: w.feedNeed,
+      heal: Math.round(w.heal * mult),
+      maxHpBonusCap: Math.round(w.maxHpBonusCap * mult),
+      coinsTakenPct: w.coinsTakenPct,
+      bite: Math.round(w.bite * mult)
+    };
+  }
+
   function sumValues(cards) {
     return cards.reduce(function (acc, c) { return acc + c.value; }, 0);
   }
@@ -53,7 +69,7 @@
 
   function feed(game, playerId, cardIds) {
     var s = S();
-    var w = D.WANDERERS.gusano;
+    var w = stats(game.durationId);
     if (!checkPending(game, playerId)) return { ok: false, error: 'No hay ninguna criatura esperando comida.' };
     var player = s.byId(game, playerId);
     var chosen = (cardIds || []).map(function (cid) {
@@ -81,7 +97,7 @@
     if (bonus > 0) msg += (healed > 0 ? ' y' : ':') + ' gana +' + bonus + ' HP maximo permanente';
     if (healed === 0 && bonus === 0) msg += ', pero ya no le cabe mas vida';
     s.logMsg(game, msg + '.');
-    s.pushFx(game, { type: 'wanderer_fed', wandererId: w.id, playerId: player.id, healed: healed, bonus: bonus });
+    s.pushFx(game, { type: 'wanderer_fed', wandererId: 'gusano', playerId: player.id, healed: healed, bonus: bonus });
 
     finish(game, player);
     return { ok: true };
@@ -89,7 +105,7 @@
 
   function refuse(game, playerId) {
     var s = S();
-    var w = D.WANDERERS.gusano;
+    var w = stats(game.durationId);
     if (!checkPending(game, playerId)) return { ok: false, error: 'No hay ninguna criatura esperando comida.' };
     var player = s.byId(game, playerId);
 
@@ -104,7 +120,7 @@
       player.hp -= bitten;
       s.logMsg(game, 'El ' + w.name + ' se enfurece y, como ' + player.name + ' no tiene monedas, le muerde: -' + bitten + ' HP.');
     }
-    s.pushFx(game, { type: 'wanderer_angry', wandererId: w.id, playerId: player.id, coinsTaken: coinsTaken, bitten: bitten });
+    s.pushFx(game, { type: 'wanderer_angry', wandererId: 'gusano', playerId: player.id, coinsTaken: coinsTaken, bitten: bitten });
 
     finish(game, player);
     return { ok: true };
@@ -134,6 +150,7 @@
   }
 
   global.VA_WANDERERS = {
+    stats: stats,
     maybeSpawn: maybeSpawn,
     canFeed: canFeed,
     sumValues: sumValues,

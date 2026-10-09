@@ -1246,7 +1246,7 @@ input[type=checkbox]:checked {
 }
 
 /* --- Gusano Suplicante (criatura errante) --- */
-.modal.wanderer-modal { text-align: center; border-color: #c97b84; max-width: 560px; }
+.modal.wanderer-modal { text-align: center; --fr: #f0a6ae; max-width: 560px; }
 .wanderer-modal h3 { color: #f0a6ae; }
 .wanderer-art { display: flex; justify-content: center; margin: -6px 0 2px; }
 .wanderer-art .worm { width: 150px; height: auto; overflow: visible; }
@@ -1259,23 +1259,26 @@ input[type=checkbox]:checked {
   border: 8px solid transparent; border-top-color: #f6ead9; border-bottom: 0;
 }
 .wanderer-modal .wanderer-options { display: grid; gap: 6px; text-align: left; font-size: 0.82rem; margin: 6px 0 10px; }
-.wanderer-modal .wanderer-options div { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; }
+.wanderer-modal .wanderer-options div { background: var(--well); border: 2px solid var(--deep-1); padding: 7px 10px; }
 .wanderer-modal .wanderer-options strong.good { color: var(--hp-full); }
 .wanderer-modal .wanderer-options strong.bad { color: var(--hp-low); }
 .wanderer-modal #hand-area { justify-content: center; }
-.feed-meter { height: 10px; border-radius: 6px; background: var(--panel-2); border: 1px solid var(--border); overflow: hidden; margin: 6px 0 4px; }
-.feed-meter > div { height: 100%; background: linear-gradient(90deg, #c97b84, #ffd36b); transition: width 0.25s ease; }
-.feed-meter.full > div { background: linear-gradient(90deg, #4caf50, #b9f6c0); }
+.feed-meter { height: 12px; background: var(--well); border: 2px solid var(--frame-shade); overflow: hidden; margin: 8px auto 4px; max-width: 320px; }
+.feed-meter > div { height: 100%; background: var(--hp-mid); transition: width 0.25s steps(4, end); }
+.feed-meter.full > div { background: var(--hp-full); }
 .fx-stage-icon .worm { width: 190px; height: auto; overflow: visible; }
-/* El gusano es mas alto que un emoji: se baja para no tapar las fichas de los jugadores. */
-.fx-stage.fx-stage-creature { top: 58% !important; }
+/* El gusano es mas alto que un emoji: se baja para no tapar las fichas de los jugadores. Marco
+   rosado en vez del rojo de combate: no es una pelea. */
+.fx-stage.fx-stage-creature { top: 58% !important; --fr: #f0a6ae; }
 .fx-stage-icon.fx-stage-lunge { animation: worm-lunge 0.5s ease-in-out; }
 .fx-coin-fly { position: absolute; left: 0; top: 0; font-size: 1.7rem; will-change: transform; filter: drop-shadow(0 0 6px rgba(255,200,60,0.85)); }
 
+.worm .w-outline { stroke: #0c0a18; }
+.worm .w-outline-fill { fill: #0c0a18; }
 .worm .w-body { stroke: #d98c8f; transition: stroke 0.3s; }
 .worm .w-rings { stroke: #a8585f; opacity: 0.45; }
 .worm .w-sheen { stroke: #f6c9c6; opacity: 0.5; }
-.worm .w-skin { fill: #eeb4a2; stroke: #a56a5e; stroke-width: 1.5; transition: fill 0.3s; }
+.worm .w-skin { fill: #eeb4a2; stroke: #0c0a18; stroke-width: 2; transition: fill 0.3s; }
 .worm .w-limb { stroke: #e3a796; }
 .worm .w-finger { stroke: #a56a5e; }
 .worm .w-hair { stroke: #3d2f2b; }

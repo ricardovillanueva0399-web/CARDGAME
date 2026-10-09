@@ -115,7 +115,27 @@
       '<li>Si no tienes ninguna carta de ataque no puedes combatir; si encima no puedes huir (Llamada de la Caceria), pierdes automaticamente.</li>' +
       '<li>El Reloj de Arena puede anular la penalizacion; la Daga de Sacrificio suma +15 al combate.</li>' +
       '</ul>';
-    return durationLine() + '<div class="cmp-grid">' + cards + '</div>' + box('Como funcionan', rules);
+    return durationLine() + '<div class="cmp-grid">' + cards + '</div>' + box('Como funcionan', rules) + renderWanderer();
+  }
+
+  /* Gusano Suplicante: no es un monstruo del mazo sino una criatura errante (agregado propio). */
+  function renderWanderer() {
+    var W = global.VA_WANDERERS;
+    if (!W) return '';
+    var w = W.stats(state.duration);
+    var art = global.VA_FX ? '<div class="wanderer-art cmp-worm">' + global.VA_FX.wormSvg('beg') + '</div>' : '';
+    return box('Criatura errante: ' + w.name, art +
+      '<ul>' +
+      '<li>No es una carta: al terminar de robar tu mano hay un ' + Math.round(D.WANDERERS.gusano.chance * 100) +
+      '% de probabilidad de que salga de la tierra (nunca en la primera vuelta de la mesa). No se combate.</li>' +
+      '<li><strong>Alimentarlo</strong>: le das cartas de tu mano que sumen al menos ' + w.feedNeed +
+      ' (se descartan). Te cura <strong>+' + w.heal + ' HP</strong>; lo que no te quepa se vuelve HP maximo permanente, hasta <strong>+' +
+      w.maxHpBonusCap + '</strong>.</li>' +
+      '<li><strong>Negarte</strong>, o no poder: se lleva el <span class="danger-text">' + Math.round(w.coinsTakenPct * 100) +
+      '% de tus Monedas</span> (redondeado hacia arriba). Sin monedas, te muerde: <span class="danger-text">-' + w.bite +
+      ' HP</span>, sin bajarte nunca de 1.</li>' +
+      '<li>Agregado propio: no esta en el Marco de Diseno v3.3.</li>' +
+      '</ul>');
   }
 
   /* ---------------- Combinaciones ---------------- */

@@ -110,8 +110,15 @@ plantea un dilema.
   bajar nunca de 1 HP (el gusano no elimina a nadie).
 - La IA lo alimenta siempre que puede, con la combinación de cartas de menor valor que
   alcance y prefiriendo no romper parejas; si no le alcanza, se niega.
-- Todos los números están en `WANDERERS.gusano` dentro de `js/data.js`, para poder
+- Los números de arriba son los de la duración Rápida. En Normal y Larga la curación,
+  el tope de HP máximo y la mordida se multiplican igual que la vida de las clases
+  (×1.5 y ×2: +30/+15/−9 y +40/+20/−12), para que pesen lo mismo en proporción; la
+  comida necesaria y el 80% de monedas no cambian. El Compendio (pestaña Monstruos)
+  muestra los valores de la duración elegida.
+- Todos los números base están en `WANDERERS.gusano` dentro de `js/data.js`, para poder
   ajustar el balance sin tocar la lógica.
+- Dibujo: SVG animado propio (no un sprite generado desde emoji), con bordes sin
+  suavizado y contorno oscuro para acercarse al estilo pixel del resto del juego.
 
 ## Modo Tutorial (jugar contra la IA)
 

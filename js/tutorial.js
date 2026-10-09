@@ -137,6 +137,8 @@
           '(-' + w.bite + ' HP, nunca te deja en 0).</li>' +
           '</ul>' +
           '<p>Las cartas que le des ya no las podras jugar este turno: ese es el precio.</p>' +
+          '<p>Estos numeros son los de la partida Rapida; en Normal y Larga la curacion, el tope ' +
+          'y la mordida crecen igual que la vida de las clases (x1.5 y x2).</p>' +
           '<p class="hint">Esta criatura es un agregado propio, no esta en el Marco de Diseno v3.3.</p>';
       }
     },

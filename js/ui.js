@@ -786,8 +786,8 @@
   /* Gusano Suplicante: alimentarlo con cartas de la mano o negarse. */
   function buildWandererOverlay() {
     var pend = game.pending;
-    var w = D.WANDERERS.gusano;
     var W = global.VA_WANDERERS;
+    var w = W.stats(game.durationId);
     var player = S.byId(game, pend.playerId);
     var wrap = overlayWrap(
       '<h3>' + escapeHtml(w.name) + '</h3>' +
@@ -1046,14 +1046,9 @@
 
   /* --- Gusano Suplicante --- */
 
+  /* La ventana del encuentro ya lo presenta: aqui solo tiembla el tablero al salir de la tierra. */
   function playWandererAppear() {
-    var w = D.WANDERERS.gusano;
     FX.shake(document.getElementById('board'), true);
-    FX.banner(
-      '<span class="fx-banner-icon">🪱</span>' +
-      '<span><strong>¡' + escapeHtml(w.name) + '!</strong><small>Algo sale de la tierra retorciendose... y pide comida.</small></span>',
-      'event', 3000
-    );
     return FX.wait(300);
   }
 

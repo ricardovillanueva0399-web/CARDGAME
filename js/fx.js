@@ -307,7 +307,7 @@
     var clip = 'worm-clip-' + wormSeq;
     var body = 'M100 222 C 84 190, 118 166, 102 136 S 95 110, 100 100';
     return '' +
-      '<svg class="worm ' + (mood || 'beg') + (extraClass ? ' ' + extraClass : '') + '" viewBox="0 0 200 236" role="img" aria-label="Gusano con rostro humano">' +
+      '<svg class="worm ' + (mood || 'beg') + (extraClass ? ' ' + extraClass : '') + '" viewBox="0 0 200 236" shape-rendering="crispEdges" role="img" aria-label="Gusano con rostro humano">' +
         '<defs><clipPath id="' + clip + '"><path d="M0 0 H200 V212 H144 A44 7 0 0 1 56 212 H0 Z"/></clipPath></defs>' +
         /* Monticulo y agujero detras: el cuerpo sale DEL agujero, recortado por su borde delantero */
         '<ellipse class="w-mound" cx="100" cy="218" rx="74" ry="17"/>' +
@@ -321,6 +321,7 @@
           '<circle cx="154" cy="56" r="9"/><circle cx="164" cy="40" r="6.5"/>' +
         '</g>' +
         '<g clip-path="url(#' + clip + ')"><g class="w-rise"><g class="w-upper">' +
+          '<path class="w-outline" d="' + body + '" stroke-width="46" stroke-linecap="round" fill="none"/>' +
           '<path class="w-body" d="' + body + '" stroke-width="40" stroke-linecap="round" fill="none"/>' +
           '<path class="w-rings" d="' + body + '" stroke-width="40" stroke-dasharray="3 11" fill="none"/>' +
           '<path class="w-sheen" d="' + body + '" stroke-width="7" stroke-linecap="round" fill="none" transform="translate(-10 0)"/>' +
@@ -335,8 +336,9 @@
             '<path class="w-finger" d="M133 106 l-3 -5 M136 104.5 l0 -6 M139 106 l3 -5" stroke-width="2.4" stroke-linecap="round"/>' +
           '</g>' +
           '<g class="w-head">' +
-            '<ellipse class="w-skin" cx="58" cy="74" rx="6" ry="10"/>' +
-            '<ellipse class="w-skin" cx="142" cy="74" rx="6" ry="10"/>' +
+            '<ellipse class="w-outline-fill" cx="100" cy="72" rx="45" ry="47"/>' +
+            '<ellipse class="w-skin" cx="57" cy="75" rx="7" ry="10"/>' +
+            '<ellipse class="w-skin" cx="143" cy="75" rx="7" ry="10"/>' +
             '<ellipse class="w-skin w-face" cx="100" cy="72" rx="42" ry="44"/>' +
             '<path class="w-hair" d="M92 30 q -5 -10 2 -17 M100 28 q 3 -12 -3 -19 M108 30 q 7 -9 2 -16" fill="none" stroke-width="2"/>' +
             '<path class="w-wrinkle" d="M84 40 q 16 -5 32 0 M88 46 q 12 -3 24 0" fill="none" stroke-width="1.4"/>' +
