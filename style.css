@@ -1398,6 +1398,7 @@ button, select, input, .card, .cmp-tab, .tut-dot { touch-action: manipulation; }
   .card.selected, .card.selected:hover { transform: translateY(-10px); }
 }
 
+.app-version { margin: 16px 0 0; text-align: right; color: var(--muted); font-size: 16px; opacity: 0.75; }
 .modal-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 12px; margin-top: 14px; padding-bottom: 6px; }
 .modal-actions .btn { margin: 0; }
 .wanderer-modal .modal-actions { justify-content: center; }

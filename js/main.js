@@ -65,6 +65,9 @@
 
   function initSetupScreen() {
     pixelateTitle();
+    var version = document.querySelector('meta[name="va-version"]');
+    var versionEl = document.getElementById('app-version');
+    if (version && versionEl) versionEl.textContent = 'Version ' + version.content;
     var countSelect = document.getElementById('player-count');
     countSelect.innerHTML = '';
     for (var n = 2; n <= 6; n += 1) {

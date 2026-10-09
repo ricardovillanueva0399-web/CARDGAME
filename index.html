@@ -2,6 +2,9 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<!-- Version publicada: cambiarla en cada entrega (tambien los ?v= de abajo) para que
+     los navegadores no mezclen archivos nuevos con copias viejas guardadas en cache. -->
+<meta name="va-version" content="2026.10.09-2">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>The Volatile Arena</title>
 <meta name="theme-color" content="#07071a">
@@ -12,7 +15,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=2026.10.09-2">
 </head>
 <body>
 <div id="crt" aria-hidden="true">
@@ -57,6 +60,7 @@
     <h3>Aprender jugando</h3>
     <p class="hint">Usa el nombre y la clase del Jugador 1 de arriba y juega una partida guiada contra una IA: ella juega sus turnos sola y el juego te va diciendo que hacer en los tuyos.</p>
     <button id="start-tutorial-btn" class="btn">Modo Tutorial (vs IA)</button>
+    <p id="app-version" class="app-version"></p>
   </section>
 
   <section id="game-screen" class="screen screen-game" hidden>
@@ -90,22 +94,22 @@
 
 </div>
 
-<script src="js/data.js"></script>
-<script src="js/deck.js"></script>
-<script src="js/hands.js"></script>
-<script src="js/combat.js"></script>
-<script src="js/events.js"></script>
-<script src="js/monsters.js"></script>
-<script src="js/shop.js"></script>
-<script src="js/wanderers.js"></script>
-<script src="js/state.js"></script>
-<script src="js/tutorial.js"></script>
-<script src="js/compendium.js"></script>
-<script src="js/coach.js"></script>
-<script src="js/ai.js"></script>
-<script src="js/pixel.js"></script>
-<script src="js/fx.js"></script>
-<script src="js/ui.js"></script>
-<script src="js/main.js"></script>
+<script src="js/data.js?v=2026.10.09-2"></script>
+<script src="js/deck.js?v=2026.10.09-2"></script>
+<script src="js/hands.js?v=2026.10.09-2"></script>
+<script src="js/combat.js?v=2026.10.09-2"></script>
+<script src="js/events.js?v=2026.10.09-2"></script>
+<script src="js/monsters.js?v=2026.10.09-2"></script>
+<script src="js/shop.js?v=2026.10.09-2"></script>
+<script src="js/wanderers.js?v=2026.10.09-2"></script>
+<script src="js/state.js?v=2026.10.09-2"></script>
+<script src="js/tutorial.js?v=2026.10.09-2"></script>
+<script src="js/compendium.js?v=2026.10.09-2"></script>
+<script src="js/coach.js?v=2026.10.09-2"></script>
+<script src="js/ai.js?v=2026.10.09-2"></script>
+<script src="js/pixel.js?v=2026.10.09-2"></script>
+<script src="js/fx.js?v=2026.10.09-2"></script>
+<script src="js/ui.js?v=2026.10.09-2"></script>
+<script src="js/main.js?v=2026.10.09-2"></script>
 </body>
 </html>

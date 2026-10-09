@@ -277,6 +277,20 @@ qué es regla original y qué es una decisión de implementación:
   añadió por ser una partida local en un solo dispositivo, para que cada jugador
   vea su mano solo cuando le toca.
 
+## Publicación y caché
+
+El sitio se publica en GitHub Pages con cada push a la rama. GitHub Pages y los
+navegadores guardan copias de los archivos durante unos minutos, así que una versión
+nueva puede tardar en verse, o mezclarse un `index.html` nuevo con un `style.css` viejo.
+Para evitarlo:
+
+- `index.html` tiene `<meta name="va-version">` y todos los CSS/JS se cargan con
+  `?v=<versión>`. **En cada entrega hay que cambiar ese valor** (en todas sus
+  apariciones dentro de `index.html`): así el navegador descarga los archivos nuevos
+  en vez de usar los guardados.
+- La versión se muestra abajo a la derecha en la pantalla de preparación, para poder
+  comprobar en el teléfono qué versión se está viendo.
+
 ## Pruebas
 
 La lógica de reglas (evaluación de manos, combate, tienda) se puede ejecutar fuera
