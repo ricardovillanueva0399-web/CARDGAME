@@ -39,6 +39,7 @@ js/pixel.js            Arte pixel: palos de la baraja y sprites generados desde 
 js/fx.js               Efectos visuales (orbes, números flotantes, estallidos, carteles)
 js/ui.js              Renderizado e interacción con el DOM
 js/main.js            Pantalla de configuración y arranque
+tools/set-version.sh  Cambia la versión publicada (ver "Publicación y caché")
 manifest.webmanifest  Datos de la app instalable (nombre, íconos, horizontal)
 icons/                Íconos de la app (PNG)
 ```
@@ -136,13 +137,17 @@ plantea un dilema.
   de la mesa, ni en los robos extra de Transfusión Prohibida).
 - **Alimentarlo:** el jugador elige cartas de su mano cuyos valores sumen al menos 8;
   esas cartas se descartan. Cura +20 HP; la curación que no quepa (por tener la vida
-  casi llena) se convierte en HP máximo permanente, hasta +10 por encuentro. Es una
-  curación fija: no la modifican pasivas de clase como la del Taumaturgo.
+  casi llena) se convierte en HP máximo permanente, hasta +10 **en toda la partida** por
+  jugador. Es una curación fija: no la modifican pasivas de clase como la del Taumaturgo.
+  (Antes el tope era por encuentro y la vida máxima podía crecer sin límite: en
+  simulaciones IA contra IA, partidas que sin el gusano terminaban siempre quedaban sin
+  terminar.)
 - **Negarse, o no poder alimentarlo:** se enoja y se lleva el 80% de las monedas
   (redondeando hacia arriba). Si el jugador no tiene ninguna, le muerde: −6 HP, sin
   bajar nunca de 1 HP (el gusano no elimina a nadie).
-- La IA lo alimenta siempre que puede, con la combinación de cartas de menor valor que
-  alcance y prefiriendo no romper parejas; si no le alcanza, se niega.
+- La IA lo alimenta con la combinación de cartas de menor valor que alcance (prefiriendo
+  no romper parejas) si eso le da vida o vida máxima, o si negarse le costaría monedas;
+  si no le alcanza, o no gana nada y no tiene monedas, se niega.
 - Los números de arriba son los de la duración Rápida. En Normal y Larga la curación,
   el tope de HP máximo y la mordida se multiplican igual que la vida de las clases
   (×1.5 y ×2: +30/+15/−9 y +40/+20/−12), para que pesen lo mismo en proporción; la
@@ -162,8 +167,10 @@ Jugador 1: tú contra una IA con una clase aleatoria.
 - La IA (`js/ai.js`) juega turnos completos por su cuenta: elige atacar o curarse
   segun su HP, forma la mejor combinación simple que tenga en mano (el grupo de
   cartas del mismo valor más grande), decide si combatir o huir de un monstruo
-  comparando el daño estimado contra su HP, compra en la Tienda, y responde a
-  Mercado Negro y a la elección de AZAZEL. No es una IA óptima: usa una heurística
+  comparando el daño estimado contra su HP, compra artefactos útiles en la Tienda (no
+  compra Botín porque no lo activa), y responde a Mercado Negro, al Gusano y a la
+  elección de AZAZEL. Sus ventanas se ven, pero sin botones: el jugador humano no
+  puede decidir por ella. No es una IA óptima: usa una heurística
   simple pensada para ser un rival razonable de práctica, no para jugar perfecto.
 - Mientras es tu turno, un panel de pistas (`js/coach.js`) te va diciendo qué hacer
   a continuación — no es un guion fijo con cartas concretas (el mazo es aleatorio en
@@ -280,16 +287,21 @@ qué es regla original y qué es una decisión de implementación:
 ## Publicación y caché
 
 El sitio se publica en GitHub Pages con cada push a la rama. GitHub Pages y los
-navegadores guardan copias de los archivos durante unos minutos, así que una versión
-nueva puede tardar en verse, o mezclarse un `index.html` nuevo con un `style.css` viejo.
-Para evitarlo:
+navegadores guardan copias de los archivos durante unos minutos (incluido el propio
+`index.html`), así que una versión nueva puede tardar en verse o mezclarse con archivos
+viejos. Lo que hay para evitarlo:
 
 - `index.html` tiene `<meta name="va-version">` y todos los CSS/JS se cargan con
-  `?v=<versión>`. **En cada entrega hay que cambiar ese valor** (en todas sus
-  apariciones dentro de `index.html`): así el navegador descarga los archivos nuevos
-  en vez de usar los guardados.
+  `?v=<versión>`. **En cada entrega**: `tools/set-version.sh <nueva-versión>` cambia todas
+  las apariciones de una vez. Con un `index.html` nuevo, el navegador baja los CSS/JS de
+  esa versión en vez de usar los guardados.
+- Si el navegador todavía tiene un `index.html` viejo, al abrir el juego se le pregunta al
+  servidor por su versión y, si es otra, la página se recarga una sola vez (nunca con
+  una partida empezada; sin conexión no hace nada).
 - La versión se muestra abajo a la derecha en la pantalla de preparación, para poder
   comprobar en el teléfono qué versión se está viendo.
+- Las fuentes, los íconos y el manifiesto no llevan `?v=`: si alguno cambia, conviene
+  cambiarle también el nombre de archivo.
 
 ## Pruebas
 

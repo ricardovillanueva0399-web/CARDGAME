@@ -49,22 +49,19 @@
 
     var levelId, mainValue;
 
-    var isEscalera = declaredType === 'attack' && effective.length === 5 &&
-      distinctValues.length === 5 &&
-      [1, 2, 3, 4, 5].every(function (v) { return counts[v] === 1; });
-
     var tripleCandidates = distinctValues.filter(function (v) { return counts[v] >= 3; });
     var pairCandidates = distinctValues.filter(function (v) { return counts[v] >= 2; });
+    /* ">=": con cartas pasadas entre mazos (Mercado, Ladron, Cleptomano) o con el 70% del
+       Alquimista puede haber 6 o mas del mismo valor; siguen siendo Quinta/Poker. */
+    var quintaValues = distinctValues.filter(function (v) { return counts[v] >= 5; });
+    var pokerValues = distinctValues.filter(function (v) { return counts[v] >= 4; });
 
-    if (isEscalera) {
-      levelId = 'escalera';
-      mainValue = null;
-    } else if (distinctValues.some(function (v) { return counts[v] === 5; })) {
+    if (quintaValues.length) {
       levelId = 'quinta';
-      mainValue = distinctValues.filter(function (v) { return counts[v] === 5; })[0];
-    } else if (distinctValues.some(function (v) { return counts[v] === 4; })) {
+      mainValue = quintaValues[0];
+    } else if (pokerValues.length) {
       levelId = 'poker';
-      mainValue = distinctValues.filter(function (v) { return counts[v] === 4; })[0];
+      mainValue = pokerValues[0];
     } else if (tripleCandidates.length >= 1 && pairCandidates.length >= 2) {
       levelId = 'full_house';
       mainValue = Math.max.apply(null, tripleCandidates);
@@ -80,6 +77,18 @@
     } else {
       levelId = 'carta_suelta';
       mainValue = distinctValues[0];
+    }
+
+    /* Escalera (solo Ataque): 1-2-3-4-5 dentro de lo elegido, aunque sobren cartas. Se queda con
+       la que valga mas entre la Escalera y la combinacion por repeticiones. */
+    var hasEscalera = declaredType === 'attack' && [1, 2, 3, 4, 5].every(function (v) { return counts[v] >= 1; });
+    if (hasEscalera) {
+      var countLevel = LEVELS[levelId];
+      var countValue = countLevel.fixed !== undefined ? countLevel.fixed : countLevel.floor + mainValue;
+      if (LEVELS.escalera.fixed > countValue) {
+        levelId = 'escalera';
+        mainValue = null;
+      }
     }
 
     if (declaredType === 'heal' && !LEVELS[levelId].healable) {

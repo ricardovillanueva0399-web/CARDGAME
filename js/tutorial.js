@@ -5,10 +5,6 @@
 
   var D = global.VA_DATA;
 
-  function stepBody(step) {
-    return typeof step.body === 'function' ? step.body() : step.body;
-  }
-
   var STEPS = [
     {
       title: 'Que es The Volatile Arena',
@@ -22,8 +18,8 @@
     },
     {
       title: 'Tu mazo y tu mano',
-      body:
-        '<p>Tu mazo personal mezcla:</p>' +
+      body: function (dur) {
+        return '<p>Tu mazo personal mezcla:</p>' +
         '<ul>' +
         '<li><strong>25 cartas de Ataque</strong> (negras &spades;&clubs;, valor 1 a 5)</li>' +
         '<li><strong>25 cartas de Curacion</strong> (rojas &hearts;&diams;, valor 1 a 5)</li>' +
@@ -33,7 +29,10 @@
         '<p>Al empezar tu turno robas hasta tener <strong>5 cartas</strong> en mano.</p>' +
         '<p>Si robas un <strong>Suceso</strong>, se activa solo, se descarta y robas una ' +
         'carta extra (no ocupa un lugar en tu mano). Si robas un <strong>Monstruo</strong>, ' +
-        'el robo se detiene ahi mismo para que decidas que hacer.</p>'
+        (D.durationOf(dur).monstersWait
+          ? 'te espera hasta que termines de robar y lo enfrentas con la mano completa.</p>'
+          : 'el robo se detiene ahi mismo para que decidas que hacer.</p>');
+      }
     },
     {
       title: 'Jugar una mano: Ataque o Curacion',
@@ -105,25 +104,27 @@
     },
     {
       title: 'Sucesos',
-      body:
-        '<p>Se activan solos al robarlos, afectan a todos salvo que digan lo contrario:</p>' +
+      body: function (dur) {
+        return '<p>Se activan solos al robarlos, afectan a todos salvo que digan lo contrario:</p>' +
         '<ul>' +
         '<li><strong>Vortice Temporal:</strong> invierte el orden de turnos.</li>' +
-        '<li><strong>Llamada de la Caceria:</strong> obliga a combatir de inmediato el ' +
-        'proximo monstruo del mazo. No se puede huir.</li>' +
+        '<li><strong>Llamada de la Caceria:</strong> obliga a combatir ' +
+        (D.durationOf(dur).monstersWait ? 'al terminar de robar' : 'de inmediato') +
+        ' el proximo monstruo del mazo. No se puede huir.</li>' +
         '<li><strong>Impuesto Revolucionario:</strong> entregas la mitad de tus Monedas al ' +
         'siguiente jugador.</li>' +
         '<li><strong>Cofre Mimetico:</strong> el proximo monstruo derrotado da doble ' +
         'recompensa, pero tiene +5 HP.</li>' +
         '<li><strong>Mercado Negro:</strong> todos pasan una carta a su vecino.</li>' +
         '<li><strong>Niebla de Guerra:</strong> nadie puede usar Botin durante una ronda.</li>' +
-        '</ul>'
+        '</ul>';
+      }
     },
     {
       title: 'Criaturas errantes: el Gusano Suplicante',
       /* Funcion: el dibujo vive en fx.js, que se carga despues de este archivo. */
-      body: function () {
-        var w = D.WANDERERS.gusano;
+      body: function (dur) {
+        var w = global.VA_WANDERERS ? global.VA_WANDERERS.stats(dur) : D.WANDERERS.gusano;
         var art = global.VA_FX ? '<div class="wanderer-art">' + global.VA_FX.wormSvg('beg') + '</div>' : '';
         return art +
           '<p>No es una carta: a veces, al terminar de robar tu mano, sale de la tierra un ' +
@@ -131,14 +132,14 @@
           '<ul>' +
           '<li><strong>Alimentarlo:</strong> le das cartas de tu mano que sumen al menos ' + w.feedNeed +
           '. Te cura <strong>+' + w.heal + ' HP</strong>; si tienes la vida casi llena, lo que ' +
-          'sobre se vuelve <strong>HP maximo permanente</strong> (hasta +' + w.maxHpBonusCap + ').</li>' +
+          'sobre se vuelve <strong>HP maximo permanente</strong> (hasta +' + w.maxHpBonusCap + ' en toda la partida).</li>' +
           '<li><strong>Negarte</strong> (o no poder): se enoja y se lleva el ' +
           Math.round(w.coinsTakenPct * 100) + '% de tus Monedas. Si no tienes ninguna, te muerde ' +
           '(-' + w.bite + ' HP, nunca te deja en 0).</li>' +
           '</ul>' +
           '<p>Las cartas que le des ya no las podras jugar este turno: ese es el precio.</p>' +
-          '<p>Estos numeros son los de la partida Rapida; en Normal y Larga la curacion, el tope ' +
-          'y la mordida crecen igual que la vida de las clases (x1.5 y x2).</p>' +
+          '<p class="tut-note">Numeros de la duracion elegida: en Normal y Larga la curacion, el ' +
+          'tope y la mordida crecen igual que la vida de las clases (x1.5 y x2).</p>' +
           '<p class="hint">Esta criatura es un agregado propio, no esta en el Marco de Diseno v3.3.</p>';
       }
     },

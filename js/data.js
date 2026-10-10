@@ -171,7 +171,7 @@
       chance: 0.08,          /* probabilidad por turno */
       feedNeed: 8,           /* suma minima de valores de cartas para alimentarlo */
       heal: 20,              /* curacion al alimentarlo */
-      maxHpBonusCap: 10,     /* la curacion que sobra se vuelve HP maximo, hasta este tope */
+      maxHpBonusCap: 10,     /* la curacion que sobra se vuelve HP maximo, hasta este tope en toda la partida */
       coinsTakenPct: 0.8,    /* si se enoja: se lleva este % de tus monedas (redondeo hacia arriba) */
       bite: 6                /* si se enoja y no tienes monedas: mordida (nunca te deja en 0) */
     }

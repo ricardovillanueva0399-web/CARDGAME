@@ -6,8 +6,10 @@
  *
  *   Gusano Suplicante: pide comida. Alimentarlo cuesta cartas de la mano (suma de valores
  *   >= feedNeed) y cura `heal` HP; la curacion que sobre (por tener la vida casi llena) se
- *   convierte en HP maximo permanente, hasta `maxHpBonusCap`. Si no lo alimentas (porque
- *   no quieres o porque no te alcanza) se enoja y se lleva casi todas tus monedas; si no
+ *   convierte en HP maximo permanente, hasta `maxHpBonusCap` EN TOTAL por jugador y partida
+ *   (sin ese tope la vida maxima crecia sin limite y habia partidas que no terminaban). Si no
+ *   lo alimentas (porque no quieres o porque no te alcanza) se enoja y se lleva casi todas
+ *   tus monedas; si no
  *   tienes ninguna, te muerde (nunca te deja en 0 HP).
  */
 (function (global) {
@@ -53,6 +55,11 @@
     return cards.reduce(function (acc, c) { return acc + c.value; }, 0);
   }
 
+  /* Cuanto HP maximo permanente le puede dar todavia el gusano a este jugador en la partida. */
+  function bonusLeft(game, player) {
+    return Math.max(0, stats(game.durationId).maxHpBonusCap - (player.wormMaxHpGained || 0));
+  }
+
   function canFeed(player) {
     return sumValues(player.hand) >= D.WANDERERS.gusano.feedNeed;
   }
@@ -88,7 +95,8 @@
 
     var room = player.maxHp - player.hp;
     var healed = Math.min(w.heal, room);
-    var bonus = Math.min(w.heal - healed, w.maxHpBonusCap);
+    var bonus = Math.min(w.heal - healed, bonusLeft(game, player));
+    player.wormMaxHpGained = (player.wormMaxHpGained || 0) + bonus;
     player.maxHp += bonus;
     player.hp += healed + bonus;
 
@@ -134,7 +142,13 @@
     var need = D.WANDERERS.gusano.feedNeed;
     var hand = player.hand;
     var n = hand.length;
-    if (n === 0 || n > 12 || sumValues(hand) < need) return null;
+    if (n === 0 || sumValues(hand) < need) return null;
+    /* Con muchas cartas, buscar solo entre las 12 de menor valor (la comida mas barata). */
+    if (n > 12) {
+      hand = hand.slice().sort(function (a, b) { return a.value - b.value; }).slice(0, 12);
+      n = hand.length;
+      if (sumValues(hand) < need) return null;
+    }
     var best = null;
     var bestScore = Infinity;
     for (var mask = 1; mask < (1 << n); mask += 1) {
@@ -142,7 +156,7 @@
       for (var i = 0; i < n; i += 1) if (mask & (1 << i)) pick.push(hand[i]);
       var total = sumValues(pick);
       if (total < need) continue;
-      var brokenGroups = pick.filter(function (c) { return !S().isCardLoose(hand, c); }).length;
+      var brokenGroups = pick.filter(function (c) { return !S().isCardLoose(player.hand, c); }).length;
       var score = total + brokenGroups * 3;
       if (score < bestScore) { bestScore = score; best = pick; }
     }
@@ -151,6 +165,7 @@
 
   global.VA_WANDERERS = {
     stats: stats,
+    bonusLeft: bonusLeft,
     maybeSpawn: maybeSpawn,
     canFeed: canFeed,
     sumValues: sumValues,

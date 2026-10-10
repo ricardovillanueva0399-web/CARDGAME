@@ -15,6 +15,7 @@
     selectedCardIds: {}, declaredType: null, targetId: null, useDaga: false, error: '',
     fightSelectedIds: {}, fightUseDaga: false, fightMode: false,
     feedSelectedIds: {},
+    mercadoShownFor: '', returnDeviceTo: null,
     lastLinked: {}, lastComboKey: ''
   };
 
@@ -135,7 +136,7 @@
   }
 
   function canUseYep(player) {
-    if (!player.alive) return false;
+    if (!player.alive || player.isAI) return false;
     if (!game.lastCancelable || !game.lastCancelable.stillValid || !game.lastCancelable.stillValid()) return false;
     if (game.lastCancelable.ownerId === player.id) return false;
     return player.lootBag.indexOf('yep') !== -1 && game.flags.nieblaTurnsLeft <= 0;
@@ -493,6 +494,7 @@
   function overlayKey() {
     if (game.gameOver) return 'over';
     if (game.phase === 'pass_device') return 'pass:' + S.currentPlayer(game).id;
+    if (ui.returnDeviceTo) return 'return:' + ui.returnDeviceTo;
     var p = game.pending;
     if (!p) return '';
     if (p.type === 'shop') return 'shop:' + p.index;
@@ -506,6 +508,8 @@
     var key = overlayKey();
     if (game.gameOver && fxPending > 0) key = '';
     overlayEnter = key !== '' && key !== lastOverlayKey;
+    /* Al cambiar de ventana se descarta lo que quedara a medio elegir en la anterior. */
+    if (key !== lastOverlayKey) { ui.fightMode = false; ui.fightSelectedIds = {}; ui.fightUseDaga = false; ui.feedSelectedIds = {}; }
     lastOverlayKey = key;
 
     if (game.gameOver) {
@@ -516,6 +520,10 @@
     }
     if (game.phase === 'pass_device') {
       root.appendChild(buildPassDeviceOverlay());
+      return;
+    }
+    if (ui.returnDeviceTo) {
+      root.appendChild(buildReturnDeviceOverlay());
       return;
     }
     if (game.pending) {
@@ -541,6 +549,34 @@
     buttons.forEach(function (b) { row.appendChild(b); });
     modal.appendChild(row);
     return row;
+  }
+
+  /* Ventana de una decision que toma la IA: se muestra, pero sin botones (no se decide por ella). */
+  function aiDeciding(modal, player) {
+    if (!player || !player.isAI) return false;
+    modal.appendChild(el('<p class="info">' + escapeHtml(player.name) + ' (IA) esta decidiendo...</p>'));
+    return true;
+  }
+
+  /* Partida local con varias personas en un mismo dispositivo: hay que pasarlo de mano en mano. */
+  function needsHandOff(toId, fromId) {
+    var humans = game.players.filter(function (p) { return p.alive && !p.isAI; }).length;
+    return humans > 1 && toId !== fromId;
+  }
+
+  /* Tras el Mercado Negro el dispositivo quedo en manos de otro jugador: devolverlo antes de
+     mostrar otra vez la mano de quien tiene el turno. */
+  function buildReturnDeviceOverlay() {
+    var cur = S.byId(game, ui.returnDeviceTo);
+    var wrap = overlayWrap(
+      '<h3>Devuelve el dispositivo</h3>' +
+      '<p>El Mercado Negro termino. Devuelvele el dispositivo a <strong>' + escapeHtml(cur ? cur.name : '') + '</strong> para que siga su turno.</p>'
+    );
+    wrap.classList.add('overlay-opaque');
+    var btn = el('<button class="btn btn-primary">Seguir</button>');
+    btn.addEventListener('click', function () { ui.returnDeviceTo = null; renderAll(); });
+    modalActions(wrap.querySelector('.modal'), [btn]);
+    return wrap;
   }
 
   function overlayWrap(innerHtml) {
@@ -596,6 +632,7 @@
         : '<p class="hint">Referencia de dificultad: ' + pend.minLabel + '. La regla real es: dano total &gt;= HP del monstruo.</p>')
     );
     var modal = wrap.querySelector('.modal');
+    if (aiDeciding(modal, player)) return wrap;
 
     if (game.isTutorial && !player.isAI) {
       modal.appendChild(el('<p class="coach-line">' + escapeHtml(global.VA_COACH.monsterHint(pend, ui.fightMode, Object.keys(ui.fightSelectedIds).length, canFight, rules.monsterWounds)) + '</p>'));
@@ -670,6 +707,7 @@
     );
     var modal = wrap.querySelector('.modal');
     modal.classList.add('shop-modal');
+    if (aiDeciding(modal, player)) return wrap;
 
     if (game.isTutorial && !player.isAI) {
       modal.appendChild(el('<p class="coach-line">' + escapeHtml(global.VA_COACH.shopHint()) + '</p>'));
@@ -726,7 +764,7 @@
       modal.appendChild(row);
     });
 
-    var doneBtn = el('<button class="btn btn-primary">' + player.name + ' termina de comprar</button>');
+    var doneBtn = el('<button class="btn btn-primary">' + escapeHtml(player.name) + ' termina de comprar</button>');
     doneBtn.addEventListener('click', function () {
       global.VA_SHOP.doneShopping(game, player.id);
       renderAll();
@@ -739,14 +777,37 @@
     var pend = game.pending;
     var pid = pend.order[pend.cursor];
     var player = S.byId(game, pid);
+    var current = S.currentPlayer(game);
+    /* Quien tiene el dispositivo ahora: el ultimo que eligio (o quien tiene el turno, al empezar). */
+    var holderId = pend.cursor > 0 ? pend.order[pend.cursor - 1] : current.id;
+    var revealKey = pid + ':' + pend.cursor;
     var wrap = overlayWrap(
       '<h3>Mercado Negro</h3>' +
       '<p>Turno de <strong>' + escapeHtml(player.name) + '</strong>: elige 1 carta para pasar a tu izquierda.</p>'
     );
     var modal = wrap.querySelector('.modal');
+    if (aiDeciding(modal, player)) return wrap;
+
+    /* Pasar y jugar: antes de mostrar la mano de cada uno, que el dispositivo cambie de manos
+       (si no, todos verian las manos de todos). */
+    if (player.hand.length > 0 && needsHandOff(pid, holderId) && ui.mercadoShownFor !== revealKey) {
+      wrap.classList.add('overlay-opaque');
+      modal.appendChild(el('<p class="hint">Pasale el dispositivo a <strong>' + escapeHtml(player.name) + '</strong>. Los demas no deberian mirar la pantalla.</p>'));
+      var showBtn = el('<button class="btn btn-primary">Ver mi mano</button>');
+      showBtn.addEventListener('click', function () { ui.mercadoShownFor = revealKey; renderAll(); });
+      modalActions(modal, [showBtn]);
+      return wrap;
+    }
 
     if (game.isTutorial && !player.isAI) {
       modal.appendChild(el('<p class="coach-line">' + escapeHtml(global.VA_COACH.mercadoHint()) + '</p>'));
+    }
+
+    /* Al terminar el Mercado, si el dispositivo quedo en otras manos, pedir que se devuelva. */
+    function afterMercadoAction() {
+      var stillMercado = game.pending && game.pending.type === 'mercado_negro';
+      if (!stillMercado && needsHandOff(current.id, pid)) ui.returnDeviceTo = current.id;
+      renderAll();
     }
 
     if (player.hand.length === 0) {
@@ -754,8 +815,8 @@
       var skipBtn = el('<button class="btn btn-primary">Continuar</button>');
       skipBtn.addEventListener('click', function () {
         var res = global.VA_EVENTS.skipMercadoPlayer(game, player.id);
-        if (!res.ok) alert(res.error);
-        renderAll();
+        if (!res.ok) { alert(res.error); return; }
+        afterMercadoAction();
       });
       modalActions(modal, [skipBtn]);
       return wrap;
@@ -765,14 +826,15 @@
       var node = cardNode(card, {});
       node.addEventListener('click', function () {
         var res = global.VA_EVENTS.pickMercadoCard(game, player.id, card.id);
-        if (!res.ok) alert(res.error);
-        renderAll();
+        if (!res.ok) { alert(res.error); return; }
+        afterMercadoAction();
       });
       handDiv.appendChild(node);
     });
     modal.appendChild(handDiv);
     return wrap;
   }
+
 
   function buildAzazelOverlay() {
     var pend = game.pending;
@@ -784,6 +846,7 @@
       '<p>' + escapeHtml(player.name) + ', elige tu recompensa:</p>'
     );
     var modal = wrap.querySelector('.modal');
+    if (aiDeciding(modal, player)) return wrap;
 
     if (game.isTutorial && !player.isAI) {
       modal.appendChild(el('<p class="coach-line">' + escapeHtml(global.VA_COACH.azazelHint()) + '</p>'));
@@ -819,22 +882,27 @@
     var modal = wrap.querySelector('.modal');
     modal.classList.add('wanderer-modal');
 
-    if (player.isAI) {
-      modal.appendChild(el('<p class="info">' + escapeHtml(player.name) + ' (IA) esta decidiendo si lo alimenta...</p>'));
-      return wrap;
-    }
+    if (aiDeciding(modal, player)) return wrap;
 
     var room = player.maxHp - player.hp;
+    var extraLeft = W.bonusLeft(game, player);
     var takes = Math.ceil(player.coins * w.coinsTakenPct);
     var bite = Math.max(0, Math.min(w.bite, player.hp - 1));
     var refuseText = takes > 0
       ? 'Se enoja y se lleva <strong class="bad">' + takes + ' de tus ' + player.coins + ' Monedas</strong>.'
       : 'No tienes monedas, asi que te muerde: <strong class="bad">-' + bite + ' HP</strong> (nunca te deja en 0).';
-    var feedText = room >= w.heal
-      ? 'te cura <strong class="good">+' + w.heal + ' HP</strong>'
-      : (room > 0
-        ? 'te cura <strong class="good">+' + room + ' HP</strong> y lo que sobra se vuelve <strong class="good">+' + Math.min(w.heal - room, w.maxHpBonusCap) + ' HP maximo</strong> para siempre'
-        : 'ya tienes la vida llena: te da <strong class="good">+' + w.maxHpBonusCap + ' HP maximo</strong> para siempre');
+    var extra = Math.min(Math.max(0, w.heal - room), extraLeft);
+    var feedText;
+    if (room >= w.heal) feedText = 'te cura <strong class="good">+' + w.heal + ' HP</strong>';
+    else if (room > 0) {
+      feedText = 'te cura <strong class="good">+' + room + ' HP</strong>' + (extra > 0
+        ? ' y lo que sobra se vuelve <strong class="good">+' + extra + ' HP maximo</strong> para siempre'
+        : ' (ya no te puede dar mas HP maximo en esta partida)');
+    } else {
+      feedText = extra > 0
+        ? 'ya tienes la vida llena: te da <strong class="good">+' + extra + ' HP maximo</strong> para siempre'
+        : 'ya tienes la vida llena y ya te dio todo el HP maximo posible en esta partida: <strong class="bad">no ganas nada</strong>';
+    }
     modal.appendChild(el(
       '<div class="wanderer-options">' +
         '<div>🍖 <strong>Alimentarlo:</strong> dale cartas de tu mano que sumen al menos ' + w.feedNeed + '; ' + feedText + '.</div>' +

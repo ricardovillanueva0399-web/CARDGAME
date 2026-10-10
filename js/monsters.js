@@ -163,13 +163,15 @@
 
   function grantOneArtifact(game, player) {
     var s = state();
+    /* Nunca uno que ya tenga (no se acumulan: ocuparia un lugar sin hacer nada). */
     var candidates = ARTIFACT_POOL.filter(function (a) {
-      return !(a === 'nucleo' && player.classId === 'espejo');
+      return !(a === 'nucleo' && player.classId === 'espejo') && player.artifacts.indexOf(a) === -1;
     });
-    var pick = pickRandom(candidates);
-    if (player.artifacts.length >= D.MAX_ARTIFACTS) {
+    var pick = pickRandom(candidates.length ? candidates : ARTIFACT_POOL);
+    if (player.artifacts.length >= D.MAX_ARTIFACTS || candidates.length === 0) {
       player.coins += D.ARTIFACTS[pick].price;
-      s.logMsg(game, player.name + ' ya tiene 3 artefactos; recibe ' + D.ARTIFACTS[pick].price + ' Monedas en su lugar.');
+      s.logMsg(game, player.name + (candidates.length === 0 ? ' ya tiene todos los artefactos que puede usar' : ' ya tiene 3 artefactos') +
+        '; recibe ' + D.ARTIFACTS[pick].price + ' Monedas en su lugar.');
     } else {
       player.artifacts.push(pick);
       s.logMsg(game, player.name + ' obtiene el artefacto ' + D.ARTIFACTS[pick].name + '.');
@@ -269,7 +271,8 @@
         hpLeft: !out.win && keepsWounds ? monsterHp - out.damage : null
       });
 
-      selected.concat(result.wastedCards).forEach(function (c) {
+      /* result.wastedCards ya esta dentro de `selected`: no agregarlas aparte (quedarian duplicadas). */
+      selected.forEach(function (c) {
         player.hand = player.hand.filter(function (h) { return h.id !== c.id; });
         player.deck.discardPile.push(c);
       });

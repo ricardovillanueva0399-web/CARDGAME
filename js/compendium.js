@@ -130,7 +130,7 @@
       '% de probabilidad de que salga de la tierra (nunca en la primera vuelta de la mesa). No se combate.</li>' +
       '<li><strong>Alimentarlo</strong>: le das cartas de tu mano que sumen al menos ' + w.feedNeed +
       ' (se descartan). Te cura <strong>+' + w.heal + ' HP</strong>; lo que no te quepa se vuelve HP maximo permanente, hasta <strong>+' +
-      w.maxHpBonusCap + '</strong>.</li>' +
+      w.maxHpBonusCap + '</strong> en toda la partida.</li>' +
       '<li><strong>Negarte</strong>, o no poder: se lleva el <span class="danger-text">' + Math.round(w.coinsTakenPct * 100) +
       '% de tus Monedas</span> (redondeado hacia arriba). Sin monedas, te muerde: <span class="danger-text">-' + w.bite +
       ' HP</span>, sin bajarte nunca de 1.</li>' +

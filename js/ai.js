@@ -98,6 +98,11 @@
     var best = [];
     var bestValue = 0;
     var isAlq = actor.classId === 'alquimista';
+    /* Fuerza bruta sobre 2^n subconjuntos: con manos grandes (cartas recibidas por Mercado,
+       Ladron o Cleptomano) se limita a las 10 cartas de mayor valor para no trabar la pagina. */
+    if (cards.length > 10) {
+      cards = cards.slice().sort(function (a, b) { return b.value - a.value; }).slice(0, 10);
+    }
     for (var mask = 1; mask < (1 << cards.length); mask += 1) {
       var sel = cards.filter(function (c, i) { return mask & (1 << i); });
       if (!HANDS().evaluateHand(sel, 'attack', isAlq).valid) continue;
@@ -142,23 +147,18 @@
     }
   }
 
+  /* Solo artefactos (pasivos que funcionan solos): la IA no activa Botin, asi que comprarlo
+     seria tirar las monedas. Compra el mas caro que pueda pagar y que de verdad le sirva. */
   function decideShop(game, actor) {
     var shop = SHOP();
-    var lootIds = Object.keys(D.LOOT).filter(function (id) { return D.LOOT[id].price !== null; });
-    lootIds.sort(function (a, b) { return D.LOOT[a].price - D.LOOT[b].price; });
-    var bought = false;
-    for (var i = 0; i < lootIds.length && !bought; i += 1) {
-      if (actor.coins >= D.LOOT[lootIds[i]].price) {
-        bought = shop.buyLoot(game, actor.id, lootIds[i]).ok;
-      }
-    }
-    if (!bought) {
-      var artIds = Object.keys(D.ARTIFACTS).sort(function (a, b) { return D.ARTIFACTS[a].price - D.ARTIFACTS[b].price; });
-      for (var j = 0; j < artIds.length && !bought; j += 1) {
-        if (actor.coins >= D.ARTIFACTS[artIds[j]].price) {
-          bought = shop.buyArtifact(game, actor.id, artIds[j]).ok;
-        }
-      }
+    var useful = Object.keys(D.ARTIFACTS).filter(function (id) {
+      if (id === 'calculadora') return false; /* solo informativa */
+      if (id === 'anillo' && actor.classId !== 'sanguinario') return false;
+      if (D.ARTIFACTS[id].incompatibleClass === actor.classId) return false;
+      return actor.artifacts.indexOf(id) === -1;
+    }).sort(function (a, b) { return D.ARTIFACTS[b].price - D.ARTIFACTS[a].price; });
+    for (var i = 0; i < useful.length; i += 1) {
+      if (actor.coins >= D.ARTIFACTS[useful[i]].price && shop.buyArtifact(game, actor.id, useful[i]).ok) break;
     }
     shop.doneShopping(game, actor.id);
   }
@@ -176,10 +176,13 @@
 
   /* Gusano Suplicante: lo alimenta siempre que pueda, con la comida mas barata (prefiere
      cartas sueltas para no romper sus parejas). Si no le alcanza, se niega. */
+  /* Lo alimenta con la comida mas barata si eso le da algo (vida o vida maxima) o si negarse
+     le costaria monedas; si no gana nada y no tiene monedas, la mordida es el mal menor. */
   function decideWanderer(game, actor) {
     var w = WANDERERS();
     var meal = w.cheapestMeal(actor);
-    if (meal) w.feed(game, actor.id, ids(meal));
+    var gains = actor.hp < actor.maxHp || w.bonusLeft(game, actor) > 0;
+    if (meal && (gains || actor.coins > 0)) w.feed(game, actor.id, ids(meal));
     else w.refuse(game, actor.id);
   }
 

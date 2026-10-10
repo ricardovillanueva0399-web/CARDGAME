@@ -41,6 +41,7 @@
     if (!item) return { ok: false, error: 'Artefacto invalido.' };
     if (player.coins < item.price) return { ok: false, error: 'No tienes suficientes Monedas.' };
     if (player.artifacts.length >= D.MAX_ARTIFACTS) return { ok: false, error: 'Ya tienes 3 artefactos equipados.' };
+    if (player.artifacts.indexOf(artifactId) !== -1) return { ok: false, error: 'Ya tienes ese artefacto.' };
     if (item.incompatibleClass && item.incompatibleClass === player.classId) {
       return { ok: false, error: player.classId + ' no puede equipar ' + item.name + '.' };
     }

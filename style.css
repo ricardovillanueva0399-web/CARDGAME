@@ -350,6 +350,7 @@ input[type=checkbox]:checked {
 }
 .class-desc { font-size: 19px; color: var(--muted); flex-basis: 100%; }
 .hint { color: var(--muted); font-size: 19px; margin-top: 14px; }
+.app-version { margin: 16px 0 0; text-align: right; color: var(--muted); font-size: 18px; }
 .divider {
   border: none; height: 3px; margin: 22px 0 14px;
   background: repeating-linear-gradient(90deg, var(--frame-shade) 0 6px, transparent 6px 12px);
@@ -637,6 +638,8 @@ input[type=checkbox]:checked {
    ===================================================================== */
 
 #overlay-root:empty { display: none; }
+/* Pantallas de "pasa/devuelve el dispositivo": tapan del todo lo que hay debajo (manos). */
+.overlay.overlay-opaque { background: var(--bg); }
 .overlay {
   position: fixed; inset: 0;
   background: rgba(2, 2, 10, 0.78);
@@ -1398,7 +1401,6 @@ button, select, input, .card, .cmp-tab, .tut-dot { touch-action: manipulation; }
   .card.selected, .card.selected:hover { transform: translateY(-10px); }
 }
 
-.app-version { margin: 16px 0 0; text-align: right; color: var(--muted); font-size: 16px; opacity: 0.75; }
 .modal-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 12px; margin-top: 14px; padding-bottom: 6px; }
 .modal-actions .btn { margin: 0; }
 .wanderer-modal .modal-actions { justify-content: center; }
@@ -1469,6 +1471,7 @@ button, select, input, .card, .cmp-tab, .tut-dot { touch-action: manipulation; }
   .class-desc { font-size: 15px; }
   .class-portrait { width: 36px; height: 36px; }
   #setup-screen .hint { font-size: 16px; margin-top: 6px; }
+  .app-version { margin-top: 6px; font-size: 16px; }
   .divider { margin: 10px 0 8px; }
 
   /* --- Partida: tres columnas a pantalla completa --- */
@@ -1479,6 +1482,10 @@ button, select, input, .card, .cmp-tab, .tut-dot { touch-action: manipulation; }
     height: calc(100dvh - (var(--bezel) + 6px) - max(calc(var(--bezel) + 6px), env(safe-area-inset-bottom)));
   }
   #game-screen.screen-game[hidden] { display: none; }
+  #game-screen.screen-game { grid-template-rows: minmax(0, 1fr); }
+  /* Sus ventanas son position:fixed; fuera del grid, para no crear una fila extra que achique
+     el tablero mientras estan abiertas. */
+  #game-screen.screen-game > #overlay-root { position: absolute; }
 
   #players-bar {
     flex-direction: column; flex-wrap: nowrap; justify-content: flex-start; align-items: stretch;

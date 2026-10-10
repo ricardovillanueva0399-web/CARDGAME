@@ -268,18 +268,20 @@
     }
 
     if (player.classId === 'cleptomano') {
-      var protectedRivals = otherAlivePlayers(game, player.id).filter(function (p) { return p.manoFriaActive && p.hand.length > 0; });
-      protectedRivals.forEach(function (p) {
-        p.manoFriaActive = false;
-        logMsg(game, p.name + ' evita el robo del Cleptomano gracias a Mano Fria.');
-      });
-      var rivals = otherAlivePlayers(game, player.id).filter(function (p) { return p.hand.length > 0 && !p.manoFriaActive; });
+      /* Se elige al azar un rival con cartas. Si ese rival tiene Mano Fria activa, la gasta y no
+         pierde nada; los demas rivales protegidos conservan su Mano Fria. */
+      var rivals = otherAlivePlayers(game, player.id).filter(function (p) { return p.hand.length > 0; });
       if (rivals.length > 0) {
         var victim = rivals[Math.floor(Math.random() * rivals.length)];
-        var idx = Math.floor(Math.random() * victim.hand.length);
-        var stolen = victim.hand.splice(idx, 1)[0];
-        player.hand.push(stolen);
-        logMsg(game, player.name + ' (Cleptomano) roba una carta de la mano de ' + victim.name + '.');
+        if (victim.manoFriaActive) {
+          victim.manoFriaActive = false;
+          logMsg(game, victim.name + ' evita el robo del Cleptomano gracias a Mano Fria.');
+        } else {
+          var idx = Math.floor(Math.random() * victim.hand.length);
+          var stolen = victim.hand.splice(idx, 1)[0];
+          player.hand.push(stolen);
+          logMsg(game, player.name + ' (Cleptomano) roba una carta de la mano de ' + victim.name + '.');
+        }
       }
     }
 
@@ -313,9 +315,15 @@
   }
 
   /* --- Fase de accion: jugar una mano --- */
+  /* Solo el jugador del turno, y solo si no hay una decision pendiente (monstruo, tienda...). */
+  function isActorNow(game, playerId, phase) {
+    var cur = currentPlayer(game);
+    return game.phase === phase && !game.pending && !!cur && cur.id === playerId;
+  }
+
   function playHand(game, playerId, cardIds, declaredType, targetId, useDaga) {
     var player = byId(game, playerId);
-    if (!player || game.phase !== 'action') return { ok: false, error: 'No es el momento de jugar una mano.' };
+    if (!player || !isActorNow(game, playerId, 'action')) return { ok: false, error: 'No es el momento de jugar una mano.' };
 
     var selected = cardIds.map(function (cid) {
       return player.hand.filter(function (c) { return c.id === cid; })[0];
@@ -352,7 +360,9 @@
       });
     }
 
-    selected.concat(result.wastedCards).forEach(function (c) {
+    /* Se descartan todas las elegidas, incluidas las que no sirvieron (result.wastedCards es un
+       subconjunto de `selected`: no se agregan aparte, o quedarian duplicadas en el mazo). */
+    selected.forEach(function (c) {
       player.hand = player.hand.filter(function (h) { return h.id !== c.id; });
       player.deck.discardPile.push(c);
     });
@@ -367,14 +377,14 @@
 
   function passAction(game, playerId) {
     var player = byId(game, playerId);
-    if (!player || game.phase !== 'action') return;
+    if (!player || !isActorNow(game, playerId, 'action')) return;
     logMsg(game, player.name + ' pasa sin jugar una mano.');
     game.phase = 'end_of_turn';
   }
 
   function discardForCoins(game, playerId, cardId) {
     var player = byId(game, playerId);
-    if (!player || game.phase !== 'end_of_turn') return { ok: false, error: 'No es el momento.' };
+    if (!player || !isActorNow(game, playerId, 'end_of_turn')) return { ok: false, error: 'No es el momento.' };
     var card = player.hand.filter(function (c) { return c.id === cardId; })[0];
     if (!card) return { ok: false, error: 'Carta no encontrada.' };
     if (!isCardLoose(player.hand, card)) return { ok: false, error: 'Esa carta forma parte de una mano posible.' };
@@ -387,7 +397,7 @@
 
   function finishEndOfTurn(game, playerId) {
     var player = byId(game, playerId);
-    if (!player || game.phase !== 'end_of_turn') return;
+    if (!player || !isActorNow(game, playerId, 'end_of_turn')) return;
     endTurn(game);
   }
 
@@ -406,6 +416,7 @@
     if (!currentPlayer(game) || currentPlayer(game).id !== playerId) {
       return { ok: false, error: 'Solo puedes usar Botin en tu propio turno.' };
     }
+    if (game.pending) return { ok: false, error: 'Primero resuelve la decision pendiente.' };
     if (!hasUsableLoot(game, player, lootId)) {
       return { ok: false, error: 'No tienes esa carta de Botin disponible (o esta bloqueada por Niebla de Guerra).' };
     }
@@ -450,7 +461,8 @@
     return { ok: false, error: 'Esa carta de Botin no se activa manualmente.' };
   }
 
-  /* Yep!: cancela la ultima Mano Fria / Espejo Roto armados o Transfusion en curso de un rival. */
+  /* Yep!: cancela la ultima Mano Fria o Espejo Roto armados por un rival (la Transfusion se
+     resuelve al instante y no se puede cancelar; ver README). */
   function useYep(game, playerId) {
     var player = byId(game, playerId);
     if (!player) return { ok: false, error: 'Jugador invalido.' };

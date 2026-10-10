@@ -42,7 +42,8 @@
         break;
 
       case 'caceria':
-        s.logMsg(game, 'Llamada de la Caceria: ' + player.name + ' debe combatir de inmediato. No puede huir.');
+        s.logMsg(game, 'Llamada de la Caceria: ' + player.name + ' debe combatir ' +
+          (global.VA_DATA.durationOf(game.durationId).monstersWait ? 'al terminar de robar' : 'de inmediato') + '. No puede huir.');
         global.VA_MONSTERS.forceEncounter(game, player);
         break;
 

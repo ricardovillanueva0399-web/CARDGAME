@@ -151,5 +151,30 @@
      ahi el juego se muestra solo en horizontal, como lo haria la app nativa. */
   if (global.navigator && global.navigator.standalone) document.documentElement.classList.add('standalone');
 
+  /*
+   * Version publicada mas nueva que la cargada: GitHub Pages y Safari guardan index.html unos
+   * minutos, y un index.html viejo puede terminar cargando CSS/JS nuevos (o al reves). Al abrir,
+   * se pregunta al servidor por su index.html y, si trae otra version, se recarga UNA vez (nunca
+   * con una partida empezada). Sin conexion o abriendo el archivo local, no hace nada.
+   */
+  function checkForNewerVersion() {
+    var meta = document.querySelector('meta[name="va-version"]');
+    if (!meta || !global.fetch || !/^https?:$/.test(global.location.protocol)) return;
+    var mine = meta.content;
+    global.fetch('index.html', { cache: 'no-cache' }).then(function (res) {
+      return res.ok ? res.text() : '';
+    }).then(function (html) {
+      var m = /<meta name="va-version" content="([^"]+)"/.exec(html);
+      if (!m || m[1] === mine || currentGame) return;
+      var key = 'va-reloaded-for';
+      try {
+        if (global.sessionStorage.getItem(key) === m[1]) return;
+        global.sessionStorage.setItem(key, m[1]);
+      } catch (e) { return; }
+      global.location.reload();
+    }).catch(function () { /* sin conexion: seguir con lo que hay */ });
+  }
+
   document.addEventListener('DOMContentLoaded', initSetupScreen);
+  document.addEventListener('DOMContentLoaded', checkForNewerVersion);
 })(window);
